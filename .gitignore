@@ -49,3 +49,8 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+
+# Local AI / planning notes
+AGENTS.md
+CLAUDE.md
+Plan.md
