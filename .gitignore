@@ -41,6 +41,13 @@ pnpm-debug.log*
 .env.local
 .env.development.local
 .env.production.local
+.env.test.local
+# dotenvx / vault keys if you ever use them
+.env.keys
+.env.vault
+
+# DB dumps / exports (can contain data + connection hints)
+*.dump
 
 # local / IDE
 .turbo
@@ -54,7 +61,7 @@ pnpm-debug.log*
 # vercel
 .vercel
 
-# Local SQLite (generated; use `npm run db:push` + `npm run db:seed`)
+# Legacy local SQLite (pre–Neon); ignore if still present
 data/qasimeats.db
 data/qasimeats.db-*
 

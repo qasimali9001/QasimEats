@@ -1,24 +1,26 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-function getDbPath() {
-  return process.env.DATABASE_PATH ?? `${process.cwd()}/data/qasimeats.db`;
+function getDatabaseUrl(): string {
+  const url =
+    process.env.DATABASE_URL?.trim() ||
+    process.env.POSTGRES_URL?.trim() ||
+    process.env.POSTGRES_PRISMA_URL?.trim();
+  if (!url) {
+    throw new Error(
+      "Missing DATABASE_URL (or POSTGRES_URL). Add your Neon connection string to .env.local. See .env.example."
+    );
+  }
+  return url;
 }
 
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
-let _sqlite: Database.Database | null = null;
 
 export function getDb() {
   if (_db) return _db;
-  const path = getDbPath();
-  mkdirSync(dirname(path), { recursive: true });
-  _sqlite = new Database(path);
-  _sqlite.pragma("journal_mode = WAL");
-  _sqlite.pragma("foreign_keys = ON");
-  _db = drizzle(_sqlite, { schema });
+  const sql = neon(getDatabaseUrl());
+  _db = drizzle(sql, { schema });
   return _db;
 }
 

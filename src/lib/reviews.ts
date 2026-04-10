@@ -26,7 +26,7 @@ async function readCsvFromKnownPaths() {
 }
 
 /**
- * Prefer SQLite when the DB exists and has at least one row; otherwise CSV fallback.
+ * Prefer Postgres when available and has at least one row; otherwise CSV fallback.
  */
 export async function getInitialReviews(): Promise<Review[]> {
   try {

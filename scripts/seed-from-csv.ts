@@ -1,14 +1,23 @@
 /**
- * Import reviews from the bundled CSV into SQLite (upsert by stable id).
- * Run after: npm run db:push
+ * Import reviews from the bundled CSV into Postgres (upsert by stable id).
+ * Requires DATABASE_URL. Run after: npm run db:push
  *
  *   npm run db:seed
  */
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { config } from "dotenv";
 import { getDb } from "../src/db";
 import { restaurants } from "../src/db/schema";
 import { parseReviewsCsv } from "../src/lib/parseCsv";
+
+function loadEnvLocal() {
+  const root = process.cwd();
+  if (existsSync(resolve(root, ".env"))) config({ path: resolve(root, ".env") });
+  if (existsSync(resolve(root, ".env.local")))
+    config({ path: resolve(root, ".env.local") });
+}
 
 async function readCsv() {
   const candidates = [
@@ -27,6 +36,7 @@ async function readCsv() {
 }
 
 async function main() {
+  loadEnvLocal();
   const csvText = await readCsv();
   const reviews = parseReviewsCsv(csvText);
   const db = getDb();
@@ -80,7 +90,7 @@ async function main() {
     n += 1;
   }
 
-  console.log(`Seeded ${n} restaurant row(s) into SQLite.`);
+  console.log(`Seeded ${n} restaurant row(s) into Postgres.`);
 }
 
 main().catch((e) => {

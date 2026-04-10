@@ -24,7 +24,7 @@ const records = parse(text, {
   trim: true,
 });
 
-for (const row of records) {
+for (const row of records as Record<string, string>[]) {
   const name = row.Name ?? row.name;
   const w = MANCHESTER_SUGGESTED_WEBSITES[name as string];
   if (w === undefined) {
