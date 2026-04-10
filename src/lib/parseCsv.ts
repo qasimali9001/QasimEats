@@ -1,0 +1,115 @@
+import { parse } from "csv-parse/sync";
+import { stableReviewId } from "./stableId";
+import { parseGoogleMapsLatLng } from "./parseGoogleMaps";
+import type { Review } from "./types";
+
+type RawRow = Record<string, string | undefined>;
+
+function toNumberOrNull(input: string | undefined) {
+  if (!input) return null;
+  const n = Number(String(input).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+function normKey(k: string) {
+  return k
+    .replace(/^\uFEFF/, "") // strip UTF-8 BOM if present
+    .trim()
+    .toLowerCase()
+    .replace(/[\s/_()]+/g, "");
+}
+
+function pick(row: RawRow, keys: string[]) {
+  // Fast path: exact keys
+  for (const k of keys) {
+    const v = row[k];
+    if (v != null && String(v).trim() !== "") return String(v).trim();
+  }
+
+  // Robust path: BOM/whitespace/formatting differences in headers
+  const byNorm = new Map<string, string | undefined>();
+  for (const [k, v] of Object.entries(row)) byNorm.set(normKey(k), v);
+
+  for (const k of keys) {
+    const v = byNorm.get(normKey(k));
+    if (v != null && String(v).trim() !== "") return String(v).trim();
+  }
+
+  return "";
+}
+
+export function parseReviewsCsv(csvText: string): Review[] {
+  const records = parse(csvText, {
+    columns: true,
+    bom: true,
+    skip_empty_lines: true,
+    relax_quotes: true,
+    relax_column_count: true,
+    trim: true,
+  }) as RawRow[];
+
+  return records.map((row) => {
+    const name = pick(row, ["Name", "name"]);
+    const cuisine = pick(row, ["Cuisine/Type", "Cuisine", "Type", "cuisine"]);
+    const price = pick(row, ["Price", "price"]);
+    const whatIOrdered = pick(row, ["What I Ordered", "Order", "whatIOrdered"]);
+    const distanceText = pick(row, ["Distance", "Distance ", "distance"]);
+    const rating = toNumberOrNull(
+      pick(row, ["Rating (out of 5)", "Rating", "rating"])
+    );
+    const review = pick(row, ["Review", "review"]);
+    const googleMapsUrl = pick(row, [
+      "Google Maps",
+      "GoogleMaps",
+      "Maps",
+      "googleMapsUrl",
+      "Google Maps URL",
+      "Google Maps Link",
+    ]);
+
+    const latRaw = pick(row, [
+      "Latitude",
+      "latitude",
+      "Lat",
+      "lat",
+    ]);
+    const lngRaw = pick(row, [
+      "Longitude",
+      "longitude",
+      "Lng",
+      "lng",
+      "Lon",
+      "lon",
+    ]);
+    const lat = toNumberOrNull(latRaw);
+    const lng = toNumberOrNull(lngRaw);
+    const locFromCsv =
+      lat != null && lng != null ? { lat, lng } : null;
+
+    const locFromUrl = googleMapsUrl
+      ? parseGoogleMapsLatLng(googleMapsUrl)
+      : null;
+
+    const loc = locFromCsv ?? locFromUrl;
+
+    return {
+      id: stableReviewId({ name, cuisine, whatIOrdered }),
+      name,
+      cuisine,
+      price,
+      whatIOrdered,
+      distanceText,
+      rating,
+      review,
+      googleMapsUrl: googleMapsUrl || undefined,
+      location: loc,
+      needsLocation: !loc,
+      geocode: locFromCsv
+        ? { source: "csv", label: "From CSV (Latitude/Longitude)" }
+        : locFromUrl
+          ? { source: "googleMapsUrl", label: "From Google Maps URL" }
+          : undefined,
+    };
+  });
+}
+
