@@ -14,8 +14,9 @@ type Props = {
 
 const defaultFilters: ReviewFilters = {
   query: "",
-  cuisines: [],
-  prices: [],
+  cuisineGroups: [],
+  dishTypes: [],
+  priceRanges: [],
   minRating: 0,
   includeUnlocated: false,
 };
@@ -49,15 +50,18 @@ export function AppShell({ reviewsPromise }: Props) {
     };
   }, [reviewsPromise]);
 
-  const cuisines = useMemo(
-    () => uniqueSorted((allReviews ?? []).map((r) => r.cuisine)),
+  const cuisineGroups = useMemo(
+    () => uniqueSorted((allReviews ?? []).map((r) => r.cuisineGroup)),
     [allReviews]
   );
 
-  const prices = useMemo(
-    () => uniqueSorted((allReviews ?? []).map((r) => r.price)),
-    [allReviews]
-  );
+  const dishTypeOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of allReviews ?? []) {
+      for (const t of r.dishTypes) set.add(t);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allReviews]);
 
   const visibleReviews = useMemo(() => {
     if (!allReviews) return [];
@@ -89,20 +93,20 @@ export function AppShell({ reviewsPromise }: Props) {
 
   if (!allReviews) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-white text-zinc-900">
+      <div className="flex min-h-dvh items-center justify-center bg-background text-foreground">
         Loading reviews…
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white text-zinc-900">
-      <div className="relative z-20 flex shrink-0 items-center justify-between gap-4 border-b border-black/10 bg-white px-4 py-4">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <div className="relative z-20 flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-surface px-4 py-4">
         <div className="min-w-0">
-          <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             QasimEats
           </div>
-          <div className="truncate text-lg font-semibold tracking-tight">
+          <div className="truncate text-lg font-semibold tracking-tight text-foreground">
             Manchester Food Map
           </div>
         </div>
@@ -113,8 +117,8 @@ export function AppShell({ reviewsPromise }: Props) {
             className={[
               "rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition-colors",
               resolveMode
-                ? "border-zinc-900 bg-zinc-900 text-white"
-                : "border-black/10 bg-white text-zinc-900 hover:bg-zinc-50",
+                ? "border-sky-400/50 bg-sky-500/20 text-sky-100"
+                : "border-white/15 bg-surface-elevated text-foreground hover:bg-white/10",
             ].join(" ")}
           >
             {resolveMode ? "Resolving…" : "Resolve locations"}
@@ -122,17 +126,17 @@ export function AppShell({ reviewsPromise }: Props) {
         </div>
       </div>
 
-      <div className="relative z-20 shrink-0 bg-white">
+      <div className="relative z-20 shrink-0 bg-surface/80">
         <FiltersBar
-          cuisines={cuisines}
-          prices={prices}
+          cuisineGroups={cuisineGroups}
+          dishTypes={dishTypeOptions}
           filters={filters}
           onChange={setFilters}
         />
       </div>
 
-      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
           <MapView
             reviews={visibleReviews}
             selectedId={selectedId}

@@ -8,23 +8,28 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Deep blue app chrome — distinct from typical light map tiles / water blues */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0c1628;
+  --foreground: #e8edf4;
+  --surface: #132238;
+  --surface-elevated: #1a2d47;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --muted: #94a3b8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ffffff;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {

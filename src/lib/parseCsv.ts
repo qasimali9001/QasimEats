@@ -1,4 +1,5 @@
 import { parse } from "csv-parse/sync";
+import { cuisineToGroup, extractDishTypes, parsePriceToPounds } from "./foodMeta";
 import { stableReviewId } from "./stableId";
 import { parseGoogleMapsLatLng } from "./parseGoogleMaps";
 import type { Review } from "./types";
@@ -92,11 +93,18 @@ export function parseReviewsCsv(csvText: string): Review[] {
 
     const loc = locFromCsv ?? locFromUrl;
 
+    const pricePounds = parsePriceToPounds(price);
+    const cuisineGroup = cuisineToGroup(cuisine);
+    const dishTypes = extractDishTypes(cuisine, whatIOrdered);
+
     return {
       id: stableReviewId({ name, cuisine, whatIOrdered }),
       name,
       cuisine,
+      cuisineGroup,
+      dishTypes,
       price,
+      pricePounds,
       whatIOrdered,
       distanceText,
       rating,

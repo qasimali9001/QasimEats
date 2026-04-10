@@ -142,11 +142,11 @@ export function ResolveLocations({
   if (!enabled) return null;
 
   return (
-    <div className="mt-5 rounded-xl border border-black/10 bg-white p-4">
+    <div className="mt-5 rounded-xl border border-white/10 bg-background/60 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-sm font-semibold text-zinc-900">Resolve locations</div>
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm font-semibold text-foreground">Resolve locations</div>
+          <div className="text-sm text-muted">
             We’ll try to find coordinates from the name (Manchester, UK). If it’s wrong,
             select the restaurant and click the map to override.
           </div>
@@ -155,23 +155,23 @@ export function ResolveLocations({
           <button
             type="button"
             onClick={geocodeAll}
-            className="rounded-lg border border-black/10 bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
+            className="rounded-lg border border-sky-400/30 bg-sky-600/80 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600"
           >
             Auto-geocode all
           </button>
           <button
             type="button"
             onClick={exportResolved}
-            className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50"
+            className="rounded-lg border border-white/15 bg-surface-elevated px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-white/10"
           >
             Export overrides
           </button>
         </div>
       </div>
 
-      <div className="mt-4 max-h-56 overflow-auto rounded-lg border border-black/5">
+      <div className="mt-4 max-h-56 overflow-auto rounded-lg border border-white/10">
         {unresolved.length ? (
-          <ul className="divide-y divide-black/5">
+          <ul className="divide-y divide-white/10">
             {unresolved.map((r) => {
               const cached = cache[r.id];
               const isSelected = selectedId === r.id;
@@ -182,11 +182,11 @@ export function ResolveLocations({
                     onClick={() => onSelect(r.id)}
                     className={[
                       "min-w-0 flex-1 text-left",
-                      isSelected ? "text-zinc-950" : "text-zinc-800",
+                      isSelected ? "text-sky-100" : "text-foreground/90",
                     ].join(" ")}
                   >
                     <div className="truncate text-sm font-medium">{r.name}</div>
-                    <div className="truncate text-xs text-zinc-500">
+                    <div className="truncate text-xs text-muted">
                       {cached?.label ? `Auto: ${cached.label}` : "No location yet"}
                     </div>
                   </button>
@@ -194,7 +194,7 @@ export function ResolveLocations({
                     type="button"
                     disabled={busyId === r.id}
                     onClick={() => geocodeOne(r.id, r.name)}
-                    className="rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-50"
+                    className="rounded-lg border border-white/15 bg-surface-elevated px-2.5 py-1.5 text-sm text-foreground shadow-sm hover:bg-white/10 disabled:opacity-50"
                   >
                     {busyId === r.id ? "Finding…" : "Find"}
                   </button>
@@ -203,7 +203,7 @@ export function ResolveLocations({
             })}
           </ul>
         ) : (
-          <div className="p-3 text-sm text-zinc-600">All locations resolved.</div>
+          <div className="p-3 text-sm text-muted">All locations resolved.</div>
         )}
       </div>
     </div>

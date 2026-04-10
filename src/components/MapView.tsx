@@ -243,7 +243,7 @@ export function MapView({
         className="h-full min-h-[280px] w-full touch-manipulation overflow-hidden md:min-h-0"
       />
       {resolveMode ? (
-        <div className="pointer-events-none absolute left-4 top-4 rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-sm text-zinc-900 shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute left-4 top-4 rounded-xl border border-white/15 bg-surface/95 px-3 py-2 text-sm text-foreground shadow-lg backdrop-blur-md">
           Click the map to set the selected restaurant&apos;s location.
         </div>
       ) : null}
