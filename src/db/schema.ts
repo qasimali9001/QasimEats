@@ -12,6 +12,8 @@ export const restaurants = sqliteTable("restaurants", {
   rating: real("rating"),
   review: text("review").notNull().default(""),
   googleMapsUrl: text("google_maps_url"),
+  websiteUrl: text("website_url"),
+  menuUrl: text("menu_url"),
   lat: real("lat"),
   lng: real("lng"),
   geocodeSource: text("geocode_source"),

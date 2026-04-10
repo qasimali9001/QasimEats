@@ -35,6 +35,8 @@ export function restaurantRowToReview(row: RestaurantRow): Review {
     rating: row.rating,
     review: row.review,
     googleMapsUrl: row.googleMapsUrl ?? undefined,
+    websiteUrl: row.websiteUrl ?? undefined,
+    menuUrl: row.menuUrl ?? undefined,
     location: hasLoc ? { lat: row.lat!, lng: row.lng! } : null,
     needsLocation: !hasLoc,
     geocode,

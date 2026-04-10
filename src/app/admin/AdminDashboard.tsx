@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import {
+  getSuggestedWebsite,
+  hasExplicitNoWebsite,
+} from "@/lib/suggestedWebsites";
 
 type Row = {
   id: string;
@@ -12,6 +16,8 @@ type Row = {
   rating: number | null;
   review: string;
   googleMapsUrl: string | null;
+  websiteUrl: string | null;
+  menuUrl: string | null;
   lat: number | null;
   lng: number | null;
   geocodeSource: string | null;
@@ -29,6 +35,8 @@ const emptyForm = (): Omit<Row, "id" | "createdAt" | "updatedAt"> => ({
   rating: null,
   review: "",
   googleMapsUrl: null,
+  websiteUrl: null,
+  menuUrl: null,
   lat: null,
   lng: null,
   geocodeSource: null,
@@ -45,6 +53,8 @@ function rowToForm(r: Row): Omit<Row, "id" | "createdAt" | "updatedAt"> {
     rating: r.rating,
     review: r.review,
     googleMapsUrl: r.googleMapsUrl,
+    websiteUrl: r.websiteUrl,
+    menuUrl: r.menuUrl,
     lat: r.lat,
     lng: r.lng,
     geocodeSource: r.geocodeSource,
@@ -81,6 +91,15 @@ export default function AdminDashboard({
   const selected = useMemo(
     () => (selectedId && selectedId !== "new" ? rows.find((r) => r.id === selectedId) : null),
     [rows, selectedId]
+  );
+
+  const suggestedWebsite = useMemo(
+    () => getSuggestedWebsite(form.name),
+    [form.name]
+  );
+  const explicitNoSuggestedWebsite = useMemo(
+    () => hasExplicitNoWebsite(form.name),
+    [form.name]
   );
 
   const startNew = useCallback(() => {
@@ -156,6 +175,8 @@ export default function AdminDashboard({
         rating: form.rating,
         review: form.review,
         googleMapsUrl: form.googleMapsUrl || null,
+        websiteUrl: form.websiteUrl || null,
+        menuUrl: form.menuUrl || null,
         lat: form.lat,
         lng: form.lng,
         geocodeSource: form.geocodeSource,
@@ -439,7 +460,7 @@ export default function AdminDashboard({
               />
             </label>
             <label className="sm:col-span-2">
-              <span className="text-xs text-muted">Google Maps URL</span>
+              <span className="text-xs text-muted">Google Maps URL (optional)</span>
               <input
                 className="mt-1 w-full rounded-lg border border-white/15 bg-background/80 px-2 py-1.5 text-sm"
                 value={form.googleMapsUrl ?? ""}
@@ -449,6 +470,61 @@ export default function AdminDashboard({
                     googleMapsUrl: e.target.value || null,
                   }))
                 }
+                placeholder="Place page or directions link — leave blank to use pin on public map"
+              />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="text-xs text-muted">Website (optional)</span>
+              <input
+                className="mt-1 w-full rounded-lg border border-white/15 bg-background/80 px-2 py-1.5 text-sm"
+                value={form.websiteUrl ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    websiteUrl: e.target.value || null,
+                  }))
+                }
+                placeholder="https://…"
+              />
+              {suggestedWebsite ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-2 text-xs">
+                  <span className="shrink-0 font-medium text-sky-200/90">
+                    Suggested
+                  </span>
+                  <span className="min-w-0 flex-1 break-all text-foreground/85">
+                    {suggestedWebsite}
+                  </span>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-md border border-sky-400/40 bg-sky-600/50 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600/70 disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={form.websiteUrl?.trim() === suggestedWebsite}
+                    onClick={() =>
+                      setForm((f) => ({ ...f, websiteUrl: suggestedWebsite }))
+                    }
+                  >
+                    {form.websiteUrl?.trim() === suggestedWebsite
+                      ? "Using suggestion"
+                      : "Use suggestion"}
+                  </button>
+                </div>
+              ) : explicitNoSuggestedWebsite ? (
+                <p className="mt-2 text-xs text-muted">
+                  No dedicated site on file for this name (social / stall only).
+                </p>
+              ) : null}
+            </label>
+            <label className="sm:col-span-2">
+              <span className="text-xs text-muted">Menu / menu link (optional)</span>
+              <input
+                className="mt-1 w-full rounded-lg border border-white/15 bg-background/80 px-2 py-1.5 text-sm"
+                value={form.menuUrl ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    menuUrl: e.target.value || null,
+                  }))
+                }
+                placeholder="Menu page, PDF, or delivery app link"
               />
             </label>
             {form.geocodeLabel ? (

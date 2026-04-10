@@ -81,6 +81,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
     ...(parsed.googleMapsUrl !== undefined
       ? { googleMapsUrl: parsed.googleMapsUrl }
       : {}),
+    ...(parsed.websiteUrl !== undefined
+      ? { websiteUrl: parsed.websiteUrl }
+      : {}),
+    ...(parsed.menuUrl !== undefined ? { menuUrl: parsed.menuUrl } : {}),
     ...(parsed.lat !== undefined ? { lat: parsed.lat } : {}),
     ...(parsed.lng !== undefined ? { lng: parsed.lng } : {}),
     ...(parsed.geocodeSource !== undefined

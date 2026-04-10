@@ -41,6 +41,8 @@ Open the public map at `/` and the **admin** UI at `/admin` (sign in with your s
 
 ## Data source
 
+Optional **CSV columns** (imported on seed / parsed when using CSV fallback): `Website`, `Menu` or `Menu URL`, and `Google Maps` / `Google Maps URL`. The public sidebar always offers a **Google Maps** link (stored URL, or a search from the pin coordinates, or a name search). Website and menu only appear when set in the DB or CSV.
+
 The public map prefers **SQLite** (`data/qasimeats.db`, gitignored) when it contains at least one restaurant row. Otherwise it falls back to CSV in this order:
 
 1. `data/Manchester Food Ratings.csv`

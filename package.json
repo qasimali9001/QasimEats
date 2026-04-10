@@ -9,12 +9,14 @@
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx scripts/seed-from-csv.ts",
+    "csv:add-websites": "tsx scripts/add-websites.ts",
     "hash-password": "node scripts/hash-password.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.8.0",
     "csv-parse": "^6.2.1",
+    "csv-stringify": "^6.7.0",
     "drizzle-orm": "^0.45.2",
     "iron-session": "^8.0.4",
     "maplibre-gl": "^5.22.0",

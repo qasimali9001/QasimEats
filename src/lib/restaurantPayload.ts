@@ -9,6 +9,8 @@ export type RestaurantUpsert = {
   rating: number | null;
   review: string;
   googleMapsUrl: string | null;
+  websiteUrl: string | null;
+  menuUrl: string | null;
   lat: number | null;
   lng: number | null;
   geocodeSource: string | null;
@@ -54,6 +56,14 @@ export function parseRestaurantBody(
     const g = str(o.googleMapsUrl);
     out.googleMapsUrl = g ? g : null;
   }
+  if ("websiteUrl" in o) {
+    const g = str(o.websiteUrl);
+    out.websiteUrl = g ? g : null;
+  }
+  if ("menuUrl" in o) {
+    const g = str(o.menuUrl);
+    out.menuUrl = g ? g : null;
+  }
   if ("lat" in o) out.lat = numOrNull(o.lat);
   if ("lng" in o) out.lng = numOrNull(o.lng);
   if ("geocodeSource" in o) {
@@ -80,6 +90,8 @@ export function snapshotRow(
     rating: row.rating,
     review: row.review,
     googleMapsUrl: row.googleMapsUrl,
+    websiteUrl: row.websiteUrl,
+    menuUrl: row.menuUrl,
     lat: row.lat,
     lng: row.lng,
     geocodeSource: row.geocodeSource,

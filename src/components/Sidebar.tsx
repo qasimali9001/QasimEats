@@ -1,6 +1,7 @@
 "use client";
 
 import { formatPricePounds } from "@/lib/foodMeta";
+import { googleMapsLinkForReview, normalizeHttpUrl } from "@/lib/mapsLinks";
 import type { Review } from "@/lib/types";
 
 type Props = {
@@ -40,6 +41,8 @@ function Stars({ rating }: { rating: number | null }) {
 
 export function Sidebar({ review, open, onClose, children }: Props) {
   const isOpen = open ?? Boolean(review);
+  const websiteUrl = normalizeHttpUrl(review?.websiteUrl);
+  const menuUrl = normalizeHttpUrl(review?.menuUrl);
 
   return (
     <aside
@@ -104,6 +107,52 @@ export function Sidebar({ review, open, onClose, children }: Props) {
                   </div>
                 </div>
               ) : null}
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Links
+                </div>
+                <ul className="mt-2 space-y-2 text-sm">
+                  <li>
+                    <a
+                      href={googleMapsLinkForReview(review)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200"
+                    >
+                      Google Maps
+                    </a>
+                    {!review.googleMapsUrl?.trim() ? (
+                      <span className="ml-2 text-xs text-muted">
+                        (search from pin)
+                      </span>
+                    ) : null}
+                  </li>
+                  {websiteUrl ? (
+                    <li>
+                      <a
+                        href={websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200"
+                      >
+                        {websiteUrl}
+                      </a>
+                    </li>
+                  ) : null}
+                  {menuUrl ? (
+                    <li>
+                      <a
+                        href={menuUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200"
+                      >
+                        Menu
+                      </a>
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                   What I ordered

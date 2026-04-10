@@ -37,7 +37,7 @@ export function filterReviews(reviews: Review[], filters: ReviewFilters) {
 
     if (q) {
       const hay =
-        `${r.name} ${r.cuisine} ${r.cuisineGroup} ${r.dishTypes.join(" ")} ${r.review} ${r.whatIOrdered}`.trim();
+        `${r.name} ${r.cuisine} ${r.cuisineGroup} ${r.dishTypes.join(" ")} ${r.review} ${r.whatIOrdered} ${r.googleMapsUrl ?? ""} ${r.websiteUrl ?? ""} ${r.menuUrl ?? ""}`.trim();
       if (!includesCI(hay, q)) return false;
     }
 

@@ -67,6 +67,19 @@ export function parseReviewsCsv(csvText: string): Review[] {
       "Google Maps URL",
       "Google Maps Link",
     ]);
+    const websiteUrl = pick(row, [
+      "Website",
+      "website",
+      "Website URL",
+      "Restaurant website",
+    ]);
+    const menuUrl = pick(row, [
+      "Menu",
+      "Menu URL",
+      "menu",
+      "menuUrl",
+      "Menu link",
+    ]);
 
     const latRaw = pick(row, [
       "Latitude",
@@ -110,6 +123,8 @@ export function parseReviewsCsv(csvText: string): Review[] {
       rating,
       review,
       googleMapsUrl: googleMapsUrl || undefined,
+      websiteUrl: websiteUrl || undefined,
+      menuUrl: menuUrl || undefined,
       location: loc,
       needsLocation: !loc,
       geocode: locFromCsv

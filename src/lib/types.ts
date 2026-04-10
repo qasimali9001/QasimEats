@@ -20,6 +20,10 @@ export type Review = {
   rating: number | null;
   review: string;
   googleMapsUrl?: string;
+  /** Restaurant website (manual or CSV). */
+  websiteUrl?: string;
+  /** Link to menu (PDF, page, or third-party). */
+  menuUrl?: string;
   location: LatLng | null;
   needsLocation: boolean;
   geocode?: {

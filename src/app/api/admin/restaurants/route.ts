@@ -61,6 +61,8 @@ export async function POST(req: Request) {
     rating: parsed.rating ?? null,
     review: parsed.review ?? "",
     googleMapsUrl: parsed.googleMapsUrl ?? null,
+    websiteUrl: parsed.websiteUrl ?? null,
+    menuUrl: parsed.menuUrl ?? null,
     lat: parsed.lat ?? null,
     lng: parsed.lng ?? null,
     geocodeSource: parsed.geocodeSource ?? null,
