@@ -37,6 +37,10 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+# Explicit: local overrides (also matched by `.env.*`)
+.env.local
+.env.development.local
+.env.production.local
 
 # local / IDE
 .turbo
@@ -49,6 +53,10 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+
+# Local SQLite (generated; use `npm run db:push` + `npm run db:seed`)
+data/qasimeats.db
+data/qasimeats.db-*
 
 # Local AI / planning notes
 AGENTS.md
