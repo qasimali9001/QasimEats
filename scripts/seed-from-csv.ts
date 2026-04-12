@@ -62,6 +62,7 @@ async function main() {
       geocodeLabel: r.geocode?.label ?? null,
       lunch: r.lunch,
       dinner: r.dinner,
+      entryDate: null,
       createdAt: now,
       updatedAt: now,
     };

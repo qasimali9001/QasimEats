@@ -4,6 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import { ManualLocationMapModal } from "@/components/admin/ManualLocationMapModal";
 import { googleMapsUrlFromLatLng } from "@/lib/mapsLinks";
 import {
+  formatUkDateFromIso,
+  parseUkDateToIso,
+  ukDateTodayLocal,
+} from "@/lib/entryDate";
+import {
   getSuggestedWebsite,
   hasExplicitNoWebsite,
 } from "@/lib/suggestedWebsites";
@@ -26,11 +31,18 @@ type Row = {
   geocodeLabel: string | null;
   lunch: boolean;
   dinner: boolean;
+  /** ISO YYYY-MM-DD from DB */
+  entryDate: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-const emptyForm = (): Omit<Row, "id" | "createdAt" | "updatedAt"> => ({
+type FormFields = Omit<Row, "id" | "createdAt" | "updatedAt" | "entryDate"> & {
+  /** DD/MM/YYYY for the date input */
+  entryDateUk: string;
+};
+
+const emptyForm = (): FormFields => ({
   name: "",
   cuisine: "",
   price: "",
@@ -47,9 +59,10 @@ const emptyForm = (): Omit<Row, "id" | "createdAt" | "updatedAt"> => ({
   geocodeLabel: null,
   lunch: false,
   dinner: false,
+  entryDateUk: ukDateTodayLocal(),
 });
 
-function rowToForm(r: Row): Omit<Row, "id" | "createdAt" | "updatedAt"> {
+function rowToForm(r: Row): FormFields {
   return {
     name: r.name,
     cuisine: r.cuisine,
@@ -67,6 +80,7 @@ function rowToForm(r: Row): Omit<Row, "id" | "createdAt" | "updatedAt"> {
     geocodeLabel: r.geocodeLabel,
     lunch: r.lunch,
     dinner: r.dinner,
+    entryDateUk: formatUkDateFromIso(r.entryDate) || "",
   };
 }
 
@@ -77,7 +91,7 @@ export default function AdminDashboard({
 }) {
   const [rows, setRows] = useState<Row[]>(initialRows);
   const [selectedId, setSelectedId] = useState<string | "new" | null>("new");
-  const [form, setForm] = useState(emptyForm());
+  const [form, setForm] = useState<FormFields>(emptyForm());
   const [town, setTown] = useState("Manchester");
   const [geoBusy, setGeoBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
@@ -342,6 +356,13 @@ export default function AdminDashboard({
     setSaveBusy(true);
     setMsg(null);
     try {
+      const entryIso = parseUkDateToIso(form.entryDateUk);
+      if (form.entryDateUk.trim() !== "" && entryIso === null) {
+        setMsg("Entry date must be DD/MM/YYYY (e.g. 10/04/2026) or left empty.");
+        setSaveBusy(false);
+        return;
+      }
+
       const payload = {
         name: form.name.trim(),
         cuisine: form.cuisine,
@@ -359,6 +380,7 @@ export default function AdminDashboard({
         geocodeLabel: form.geocodeLabel,
         lunch: form.lunch,
         dinner: form.dinner,
+        entryDate: entryIso,
       };
 
       if (selectedId === "new") {
@@ -553,6 +575,24 @@ export default function AdminDashboard({
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
+            </label>
+
+            <label className="min-w-0 sm:col-span-2">
+              <span className="text-xs text-muted">Entry date</span>
+              <input
+                className={`${fieldBase} tabular-nums`}
+                autoComplete="off"
+                inputMode="numeric"
+                placeholder="DD/MM/YYYY"
+                value={form.entryDateUk}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, entryDateUk: e.target.value }))
+                }
+              />
+              <span className="mt-1 block text-[11px] text-muted">
+                Defaults to today for new pins. Clear the field to leave the
+                date unset (e.g. older entries).
+              </span>
             </label>
 
             <label className="min-w-0 sm:col-span-1">

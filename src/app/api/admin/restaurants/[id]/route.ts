@@ -95,6 +95,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       : {}),
     ...(parsed.lunch !== undefined ? { lunch: parsed.lunch } : {}),
     ...(parsed.dinner !== undefined ? { dinner: parsed.dinner } : {}),
+    ...(parsed.entryDate !== undefined ? { entryDate: parsed.entryDate } : {}),
     updatedAt: now,
   };
 

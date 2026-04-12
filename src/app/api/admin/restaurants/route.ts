@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { restaurants } from "@/db/schema";
 import { writeAudit } from "@/lib/audit";
+import { isoDateLocal } from "@/lib/entryDate";
 import { parseRestaurantBody, snapshotRow } from "@/lib/restaurantPayload";
 import { requireAdminSession } from "@/lib/session";
 
@@ -51,6 +52,11 @@ export async function POST(req: Request) {
   const now = new Date();
   const id = crypto.randomUUID();
 
+  const entryDate =
+    "entryDate" in parsed
+      ? (parsed.entryDate ?? null)
+      : isoDateLocal(now);
+
   const row = {
     id,
     name: parsed.name,
@@ -69,6 +75,7 @@ export async function POST(req: Request) {
     geocodeLabel: parsed.geocodeLabel ?? null,
     lunch: parsed.lunch ?? false,
     dinner: parsed.dinner ?? false,
+    entryDate,
     createdAt: now,
     updatedAt: now,
   };

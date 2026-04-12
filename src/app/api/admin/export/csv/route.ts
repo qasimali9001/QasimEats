@@ -24,6 +24,7 @@ const HEADERS = [
   "Geocode label",
   "Lunch",
   "Dinner",
+  "Entry date",
   "Created at",
   "Updated at",
 ] as const;
@@ -77,6 +78,7 @@ export async function GET() {
         r.geocodeLabel ?? "",
         r.lunch ? "yes" : "",
         r.dinner ? "yes" : "",
+        r.entryDate ?? "",
         fmtDate(r.createdAt),
         fmtDate(r.updatedAt),
       ])

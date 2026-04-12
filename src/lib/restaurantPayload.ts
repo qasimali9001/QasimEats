@@ -17,6 +17,8 @@ export type RestaurantUpsert = {
   geocodeLabel: string | null;
   lunch?: boolean;
   dinner?: boolean;
+  /** ISO date YYYY-MM-DD */
+  entryDate?: string | null;
 };
 
 function str(v: unknown, fallback = ""): string {
@@ -78,6 +80,23 @@ export function parseRestaurantBody(
   }
   if ("lunch" in o) out.lunch = Boolean(o.lunch);
   if ("dinner" in o) out.dinner = Boolean(o.dinner);
+  if ("entryDate" in o) {
+    const v = o.entryDate;
+    if (v === null || v === "") {
+      out.entryDate = null;
+    } else if (typeof v === "string") {
+      const s = v.trim();
+      if (!s) {
+        out.entryDate = null;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        out.entryDate = s;
+      } else {
+        throw new Error("entryDate must be YYYY-MM-DD or empty");
+      }
+    } else {
+      throw new Error("entryDate must be a string or null");
+    }
+  }
   return out;
 }
 
@@ -102,6 +121,7 @@ export function snapshotRow(
     geocodeLabel: row.geocodeLabel,
     lunch: row.lunch,
     dinner: row.dinner,
+    entryDate: row.entryDate ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

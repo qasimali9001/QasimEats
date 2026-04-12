@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  date,
   doublePrecision,
   pgTable,
   text,
@@ -26,6 +27,8 @@ export const restaurants = pgTable("restaurants", {
   geocodeLabel: text("geocode_label"),
   lunch: boolean("lunch").notNull().default(false),
   dinner: boolean("dinner").notNull().default(false),
+  /** Calendar date of the visit / review entry (optional for legacy rows). */
+  entryDate: date("entry_date", { mode: "string" }),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",
