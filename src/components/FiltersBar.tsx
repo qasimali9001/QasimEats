@@ -47,6 +47,103 @@ function ToggleChip({
   );
 }
 
+function IconSun({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+}
+
+function IconMoon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function MealTimeToggles({
+  mealTags,
+  onChange,
+}: {
+  mealTags: MealTag[];
+  onChange: (next: MealTag[]) => void;
+}) {
+  const toggle = (tag: MealTag) => {
+    const pressed = mealTags.includes(tag);
+    onChange(
+      pressed ? mealTags.filter((x) => x !== tag) : [...mealTags, tag],
+    );
+  };
+
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <span
+        id="meal-filter-label"
+        className="max-sm:sr-only text-[10px] font-semibold uppercase tracking-wide text-muted"
+      >
+        Meal
+      </span>
+      <div
+        role="group"
+        aria-labelledby="meal-filter-label"
+        className="inline-flex divide-x divide-white/10 overflow-hidden rounded-lg border border-white/15 bg-background/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+      >
+        <button
+          type="button"
+          aria-pressed={mealTags.includes("lunch")}
+          title="Daytime / lunch — show places tagged as good for lunch"
+          onClick={() => toggle("lunch")}
+          className={[
+            "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3",
+            mealTags.includes("lunch")
+              ? "bg-amber-500/20 text-amber-50 ring-1 ring-inset ring-amber-400/35"
+              : "text-muted hover:bg-white/5 hover:text-foreground",
+          ].join(" ")}
+        >
+          <IconSun className="h-3.5 w-3.5 shrink-0 opacity-90" />
+          <span>Lunch</span>
+        </button>
+        <button
+          type="button"
+          aria-pressed={mealTags.includes("dinner")}
+          title="Evening / dinner — show places tagged as good for dinner"
+          onClick={() => toggle("dinner")}
+          className={[
+            "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3",
+            mealTags.includes("dinner")
+              ? "bg-indigo-500/20 text-indigo-50 ring-1 ring-inset ring-indigo-400/35"
+              : "text-muted hover:bg-white/5 hover:text-foreground",
+          ].join(" ")}
+        >
+          <IconMoon className="h-3.5 w-3.5 shrink-0 opacity-90" />
+          <span>Dinner</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg
@@ -146,7 +243,6 @@ export function FiltersBar({
   onChange,
   onPickRestaurant,
 }: Props) {
-  const [openMeal, setOpenMeal] = useState(false);
   const [openCuisine, setOpenCuisine] = useState(false);
   const [openDish, setOpenDish] = useState(false);
   const [openPrice, setOpenPrice] = useState(false);
@@ -274,8 +370,12 @@ export function FiltersBar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+      <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <MealTimeToggles
+          mealTags={filters.mealTags}
+          onChange={(mealTags) => onChange({ ...filters, mealTags })}
+        />
+        <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">
           Min rating
         </span>
         <input
@@ -287,9 +387,9 @@ export function FiltersBar({
           onChange={(e) =>
             onChange({ ...filters, minRating: Number(e.target.value) })
           }
-          className="min-w-[8rem] flex-1 sm:max-w-xs"
+          className="h-9 min-w-[7rem] flex-1"
         />
-        <span className="w-10 text-right tabular-nums text-sm text-foreground">
+        <span className="w-10 shrink-0 text-right tabular-nums text-sm text-foreground">
           {filters.minRating}
         </span>
         <button
@@ -302,37 +402,6 @@ export function FiltersBar({
       </div>
 
       <div className="flex flex-col gap-2">
-        <FilterSection
-          id="filter-meal"
-          title="Lunch & dinner"
-          selectedCount={filters.mealTags.length}
-          open={openMeal}
-          onToggle={() => setOpenMeal((v) => !v)}
-        >
-          <div className="flex flex-wrap gap-2">
-            {(["lunch", "dinner"] as MealTag[]).map((tag) => {
-                const label = tag === "lunch" ? "Lunch" : "Dinner";
-                const pressed = filters.mealTags.includes(tag);
-                return (
-                  <ToggleChip
-                    key={tag}
-                    label={label}
-                    pressed={pressed}
-                    onToggle={() =>
-                      onChange({
-                        ...filters,
-                        mealTags: pressed
-                          ? filters.mealTags.filter((x) => x !== tag)
-                          : [...filters.mealTags, tag],
-                      })
-                    }
-                  />
-                );
-              }
-            )}
-          </div>
-        </FilterSection>
-
         <FilterSection
           id="filter-cuisine"
           title="Cuisine"

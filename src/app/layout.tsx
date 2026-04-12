@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QasimEats — Manchester Food Map",
+  title: "Qasim Eats",
   description: "Restaurant reviews and ratings on a map of Manchester.",
 };
 

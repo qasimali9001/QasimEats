@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Review } from "@/lib/types";
 import { DEFAULT_REVIEW_FILTERS } from "@/lib/types";
 import { filterReviews } from "@/lib/filterReviews";
+import { AboutModal } from "@/components/AboutModal";
 import { FiltersBar } from "@/components/FiltersBar";
 import { MapView } from "@/components/MapView";
 import { Sidebar } from "@/components/Sidebar";
@@ -22,6 +23,7 @@ export function AppShell({ reviewsPromise }: Props) {
   const [allReviews, setAllReviews] = useState<Review[] | null>(null);
   const [filters, setFilters] = useState(DEFAULT_REVIEW_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -72,16 +74,22 @@ export function AppShell({ reviewsPromise }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <div className="relative z-20 flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-surface px-4 py-4">
-        <div className="min-w-0">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
-            QasimEats
-          </div>
-          <div className="truncate text-lg font-semibold tracking-tight text-foreground">
-            Manchester Food Map
-          </div>
-        </div>
+      <div className="relative z-20 flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-surface px-4 py-3 sm:py-4">
+        <h1 className="font-sans text-xl font-medium leading-none tracking-tight text-foreground [-webkit-text-stroke:0.75px_rgba(255,255,255,0.55)] sm:text-2xl">
+          Qasim Eats
+        </h1>
+        <button
+          type="button"
+          onClick={() => setAboutOpen(true)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-background/50 text-base font-semibold text-foreground hover:bg-white/10"
+          aria-label="About QasimEats"
+          title="About this site"
+        >
+          ?
+        </button>
       </div>
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       <div className="relative z-20 shrink-0 bg-surface/80">
         <FiltersBar
