@@ -1,3 +1,5 @@
+import { lookupRestaurantWebsite } from "@/lib/lookupRestaurantWebsite";
+
 export const runtime = "nodejs";
 
 type GeocodeResult = {
@@ -6,6 +8,8 @@ type GeocodeResult = {
   label: string;
   importance?: number;
   query?: string;
+  /** Present when Google Places lookup found an official site (requires API key). */
+  websiteUrl?: string | null;
 };
 
 function clampQuery(q: string) {
@@ -78,12 +82,28 @@ export async function GET(req: Request) {
   const top = data?.[0];
   if (!top) return Response.json({ result: null });
 
+  const lat = Number(top.lat);
+  const lng = Number(top.lon);
+
+  let websiteUrl: string | null = null;
+  try {
+    websiteUrl = await lookupRestaurantWebsite({
+      name,
+      city,
+      lat,
+      lng,
+    });
+  } catch {
+    websiteUrl = null;
+  }
+
   const result: GeocodeResult = {
-    lat: Number(top.lat),
-    lng: Number(top.lon),
+    lat,
+    lng,
     label: top.display_name,
     importance: top.importance,
     query: q,
+    websiteUrl,
   };
 
   return Response.json({ result });

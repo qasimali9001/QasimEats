@@ -1,11 +1,20 @@
+import { lookupRestaurantWebsite } from "@/lib/lookupRestaurantWebsite";
+
 export const runtime = "nodejs";
 
 let lastCallAt = 0;
+
+function clamp(s: string, max: number) {
+  const t = s.trim();
+  return t.length > max ? t.slice(0, max) : t;
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const latRaw = searchParams.get("lat");
   const lngRaw = searchParams.get("lng");
+  const placeName = clamp(searchParams.get("name") ?? "", 120);
+  const placeCity = clamp(searchParams.get("city") ?? "", 80);
 
   const lat = latRaw === null ? NaN : Number(latRaw);
   const lng = lngRaw === null ? NaN : Number(lngRaw);
@@ -63,5 +72,19 @@ export async function GET(req: Request) {
       ? data.display_name.trim()
       : null;
 
-  return Response.json({ label });
+  let websiteUrl: string | null = null;
+  if (placeName) {
+    try {
+      websiteUrl = await lookupRestaurantWebsite({
+        name: placeName,
+        city: placeCity,
+        lat,
+        lng,
+      });
+    } catch {
+      websiteUrl = null;
+    }
+  }
+
+  return Response.json({ label, websiteUrl });
 }

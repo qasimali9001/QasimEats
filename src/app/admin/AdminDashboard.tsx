@@ -171,7 +171,12 @@ export default function AdminDashboard({
         credentials: "same-origin",
       });
       let data: {
-        result: null | { lat: number; lng: number; label: string };
+        result: null | {
+          lat: number;
+          lng: number;
+          label: string;
+          websiteUrl?: string | null;
+        };
         error?: string;
       };
       try {
@@ -188,7 +193,7 @@ export default function AdminDashboard({
         setMsg("No location found — try a different name or town.");
         return;
       }
-      const { lat, lng, label } = data.result;
+      const { lat, lng, label, websiteUrl: placesSite } = data.result;
       const mapsUrl = googleMapsUrlFromLatLng(lat, lng);
       const suggestedSite = getSuggestedWebsite(name);
       setForm((f) => ({
@@ -198,9 +203,13 @@ export default function AdminDashboard({
         geocodeSource: "nominatim",
         geocodeLabel: label,
         googleMapsUrl: mapsUrl,
-        websiteUrl: suggestedSite ?? f.websiteUrl,
+        websiteUrl: placesSite ?? suggestedSite ?? f.websiteUrl,
       }));
-      setMsg("Location and links updated from lookup.");
+      setMsg(
+        placesSite
+          ? "Location, website (Google Places), and links updated."
+          : "Location and links updated from lookup."
+      );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Geocode request failed.");
     } finally {
@@ -212,13 +221,25 @@ export default function AdminDashboard({
     async (coords: { lat: number; lng: number }) => {
       const { lat, lng } = coords;
       let label: string | null = null;
+      let placesSite: string | null | undefined;
       let warn: string | null = null;
+      const name = form.name.trim();
+      const cityQ = town.trim() || "Manchester";
       try {
-        const res = await fetch(
-          `/api/reverse-geocode?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
-          { credentials: "same-origin" }
-        );
-        let data: { label?: string | null; error?: string } = {};
+        const qs = new URLSearchParams({
+          lat: String(lat),
+          lng: String(lng),
+          name,
+          city: cityQ,
+        });
+        const res = await fetch(`/api/reverse-geocode?${qs}`, {
+          credentials: "same-origin",
+        });
+        let data: {
+          label?: string | null;
+          websiteUrl?: string | null;
+          error?: string;
+        } = {};
         try {
           data = (await res.json()) as typeof data;
         } catch {
@@ -226,6 +247,7 @@ export default function AdminDashboard({
         }
         if (res.ok) {
           label = data.label ?? null;
+          placesSite = data.websiteUrl;
         } else {
           warn = data.error ?? `Reverse lookup failed (${res.status}).`;
         }
@@ -234,7 +256,6 @@ export default function AdminDashboard({
       }
 
       const mapsUrl = googleMapsUrlFromLatLng(lat, lng);
-      const name = form.name.trim();
       const suggestedSite = getSuggestedWebsite(name);
       setForm((f) => ({
         ...f,
@@ -244,18 +265,20 @@ export default function AdminDashboard({
         geocodeLabel:
           label ?? `Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
         googleMapsUrl: mapsUrl,
-        websiteUrl: suggestedSite ?? f.websiteUrl,
+        websiteUrl: placesSite ?? suggestedSite ?? f.websiteUrl,
       }));
       setManualMapOpen(false);
       setMsg(
         warn
           ? `Location saved from map. ${warn}`
-          : label
-            ? "Location set from map (address matched)."
-            : "Location set from map."
+          : placesSite
+            ? "Location set from map (address + website from Google Places)."
+            : label
+              ? "Location set from map (address matched)."
+              : "Location set from map."
       );
     },
-    [form.name]
+    [form.name, town]
   );
 
   async function save() {
