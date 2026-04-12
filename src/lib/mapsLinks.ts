@@ -9,12 +9,16 @@ export function googleMapsLinkForReview(r: Review): string {
   if (stored) return stored;
 
   if (r.location) {
-    const { lat, lng } = r.location;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+    return googleMapsUrlFromLatLng(r.location.lat, r.location.lng);
   }
 
   const q = `${r.name}, Manchester, UK`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+
+/** Search URL pinned to coordinates (same as public map fallback). */
+export function googleMapsUrlFromLatLng(lat: number, lng: number): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
 /** Ensure links open correctly when users omit `https://`. */

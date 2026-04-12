@@ -50,6 +50,7 @@ export function parseReviewsCsv(csvText: string): Review[] {
   }) as RawRow[];
 
   return records.map((row) => {
+    const idFromCsv = pick(row, ["Id", "ID", "id"]);
     const name = pick(row, ["Name", "name"]);
     const cuisine = pick(row, ["Cuisine/Type", "Cuisine", "Type", "cuisine"]);
     const price = pick(row, ["Price", "price"]);
@@ -106,12 +107,50 @@ export function parseReviewsCsv(csvText: string): Review[] {
 
     const loc = locFromCsv ?? locFromUrl;
 
+    const geocodeSourcePick = pick(row, [
+      "Geocode source",
+      "geocode_source",
+      "Geocode Source",
+    ]);
+    const geocodeLabelPick = pick(row, ["Geocode label", "geocode_label", "Geocode Label"]);
+
     const pricePounds = parsePriceToPounds(price);
     const cuisineGroup = cuisineToGroup(cuisine);
     const dishTypes = extractDishTypes(cuisine, whatIOrdered);
 
+    const id =
+      idFromCsv.trim().length > 0
+        ? idFromCsv.trim()
+        : stableReviewId({ name, cuisine, whatIOrdered });
+
+    const validGeocodeSources = new Set([
+      "googleMapsUrl",
+      "nominatim",
+      "csv",
+      "manual",
+    ]);
+
+    let geocode: Review["geocode"] | undefined;
+    if (locFromCsv) {
+      if (geocodeSourcePick && validGeocodeSources.has(geocodeSourcePick)) {
+        geocode = {
+          source: geocodeSourcePick as NonNullable<Review["geocode"]>["source"],
+          label: geocodeLabelPick || undefined,
+        };
+      } else {
+        geocode = {
+          source: "csv",
+          label:
+            geocodeLabelPick ||
+            (geocodeSourcePick ? geocodeSourcePick : "From CSV (Latitude/Longitude)"),
+        };
+      }
+    } else if (locFromUrl) {
+      geocode = { source: "googleMapsUrl", label: "From Google Maps URL" };
+    }
+
     return {
-      id: stableReviewId({ name, cuisine, whatIOrdered }),
+      id,
       name,
       cuisine,
       cuisineGroup,
@@ -127,11 +166,7 @@ export function parseReviewsCsv(csvText: string): Review[] {
       menuUrl: menuUrl || undefined,
       location: loc,
       needsLocation: !loc,
-      geocode: locFromCsv
-        ? { source: "csv", label: "From CSV (Latitude/Longitude)" }
-        : locFromUrl
-          ? { source: "googleMapsUrl", label: "From Google Maps URL" }
-          : undefined,
+      geocode,
     };
   });
 }

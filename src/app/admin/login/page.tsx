@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto min-w-0 max-w-md px-0">
       <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
       <p className="mt-1 text-sm text-muted">
         Superuser access only. Credentials live in your local{" "}
@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
             Username
           </label>
           <input
-            className="mt-1 w-full rounded-lg border border-white/15 bg-background/80 px-3 py-2 text-sm outline-none focus:border-sky-400/40"
+            className="mt-1 w-full min-w-0 max-w-full rounded-lg border border-white/15 bg-background/80 px-3 py-2.5 text-base outline-none focus:border-sky-400/40 sm:py-2 sm:text-sm"
             autoComplete="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
           </label>
           <input
             type="password"
-            className="mt-1 w-full rounded-lg border border-white/15 bg-background/80 px-3 py-2 text-sm outline-none focus:border-sky-400/40"
+            className="mt-1 w-full min-w-0 max-w-full rounded-lg border border-white/15 bg-background/80 px-3 py-2.5 text-base outline-none focus:border-sky-400/40 sm:py-2 sm:text-sm"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-lg border border-sky-400/30 bg-sky-600/80 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-sky-400/30 bg-sky-600/80 py-2.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50 sm:min-h-0 sm:py-2"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
