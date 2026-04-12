@@ -22,6 +22,8 @@ const HEADERS = [
   "Menu",
   "Geocode source",
   "Geocode label",
+  "Lunch",
+  "Dinner",
   "Created at",
   "Updated at",
 ] as const;
@@ -73,6 +75,8 @@ export async function GET() {
         r.menuUrl ?? "",
         r.geocodeSource ?? "",
         r.geocodeLabel ?? "",
+        r.lunch ? "yes" : "",
+        r.dinner ? "yes" : "",
         fmtDate(r.createdAt),
         fmtDate(r.updatedAt),
       ])

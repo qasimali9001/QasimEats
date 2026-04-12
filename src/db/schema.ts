@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   doublePrecision,
   pgTable,
   text,
@@ -23,6 +24,8 @@ export const restaurants = pgTable("restaurants", {
   lng: doublePrecision("lng"),
   geocodeSource: text("geocode_source"),
   geocodeLabel: text("geocode_label"),
+  lunch: boolean("lunch").notNull().default(false),
+  dinner: boolean("dinner").notNull().default(false),
   createdAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

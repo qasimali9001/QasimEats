@@ -93,6 +93,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     ...(parsed.geocodeLabel !== undefined
       ? { geocodeLabel: parsed.geocodeLabel }
       : {}),
+    ...(parsed.lunch !== undefined ? { lunch: parsed.lunch } : {}),
+    ...(parsed.dinner !== undefined ? { dinner: parsed.dinner } : {}),
     updatedAt: now,
   };
 

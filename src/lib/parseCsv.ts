@@ -167,6 +167,8 @@ export function parseReviewsCsv(csvText: string): Review[] {
       location: loc,
       needsLocation: !loc,
       geocode,
+      lunch: false,
+      dinner: false,
     };
   });
 }

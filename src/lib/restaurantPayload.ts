@@ -15,6 +15,8 @@ export type RestaurantUpsert = {
   lng: number | null;
   geocodeSource: string | null;
   geocodeLabel: string | null;
+  lunch?: boolean;
+  dinner?: boolean;
 };
 
 function str(v: unknown, fallback = ""): string {
@@ -74,6 +76,8 @@ export function parseRestaurantBody(
     const s = str(o.geocodeLabel);
     out.geocodeLabel = s ? s : null;
   }
+  if ("lunch" in o) out.lunch = Boolean(o.lunch);
+  if ("dinner" in o) out.dinner = Boolean(o.dinner);
   return out;
 }
 
@@ -96,6 +100,8 @@ export function snapshotRow(
     lng: row.lng,
     geocodeSource: row.geocodeSource,
     geocodeLabel: row.geocodeLabel,
+    lunch: row.lunch,
+    dinner: row.dinner,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

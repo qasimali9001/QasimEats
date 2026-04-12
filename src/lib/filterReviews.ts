@@ -36,9 +36,15 @@ export function filterReviews(reviews: Review[], filters: ReviewFilters) {
     }
 
     if (q) {
-      const hay =
-        `${r.name} ${r.cuisine} ${r.cuisineGroup} ${r.dishTypes.join(" ")} ${r.review} ${r.whatIOrdered} ${r.googleMapsUrl ?? ""} ${r.websiteUrl ?? ""} ${r.menuUrl ?? ""}`.trim();
-      if (!includesCI(hay, q)) return false;
+      if (!includesCI(r.name, q)) return false;
+    }
+
+    if (filters.mealTags.length) {
+      const wantsLunch = filters.mealTags.includes("lunch");
+      const wantsDinner = filters.mealTags.includes("dinner");
+      const matches =
+        (wantsLunch && r.lunch) || (wantsDinner && r.dinner);
+      if (!matches) return false;
     }
 
     return true;

@@ -40,5 +40,7 @@ export function restaurantRowToReview(row: RestaurantRow): Review {
     location: hasLoc ? { lat: row.lat!, lng: row.lng! } : null,
     needsLocation: !hasLoc,
     geocode,
+    lunch: row.lunch,
+    dinner: row.dinner,
   };
 }

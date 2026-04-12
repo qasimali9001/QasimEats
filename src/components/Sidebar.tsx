@@ -65,6 +65,23 @@ export function Sidebar({ review, open, onClose }: Props) {
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               {review ? (
                 <>
+                  {(review.lunch || review.dinner) && (
+                    <>
+                      <span className="flex flex-wrap gap-1.5">
+                        {review.lunch ? (
+                          <span className="rounded-md border border-amber-400/30 bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-100/95">
+                            Lunch
+                          </span>
+                        ) : null}
+                        {review.dinner ? (
+                          <span className="rounded-md border border-violet-400/30 bg-violet-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-violet-100/95">
+                            Dinner
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="text-white/25">·</span>
+                    </>
+                  )}
                   <span className="font-medium text-foreground/90">
                     {review.cuisineGroup}
                   </span>

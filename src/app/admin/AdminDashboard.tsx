@@ -24,6 +24,8 @@ type Row = {
   lng: number | null;
   geocodeSource: string | null;
   geocodeLabel: string | null;
+  lunch: boolean;
+  dinner: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -43,6 +45,8 @@ const emptyForm = (): Omit<Row, "id" | "createdAt" | "updatedAt"> => ({
   lng: null,
   geocodeSource: null,
   geocodeLabel: null,
+  lunch: false,
+  dinner: false,
 });
 
 function rowToForm(r: Row): Omit<Row, "id" | "createdAt" | "updatedAt"> {
@@ -61,6 +65,8 @@ function rowToForm(r: Row): Omit<Row, "id" | "createdAt" | "updatedAt"> {
     lng: r.lng,
     geocodeSource: r.geocodeSource,
     geocodeLabel: r.geocodeLabel,
+    lunch: r.lunch,
+    dinner: r.dinner,
   };
 }
 
@@ -90,6 +96,7 @@ export default function AdminDashboard({
   >([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [manualMapOpen, setManualMapOpen] = useState(false);
+  const [websiteBusy, setWebsiteBusy] = useState(false);
 
   const selected = useMemo(
     () => (selectedId && selectedId !== "new" ? rows.find((r) => r.id === selectedId) : null),
@@ -217,27 +224,76 @@ export default function AdminDashboard({
     }
   }
 
+  async function findWebsite() {
+    const name = form.name.trim();
+    if (!name) {
+      setMsg("Enter a restaurant name first.");
+      return;
+    }
+    if (form.lat == null || form.lng == null) {
+      setMsg("Set a location first (Find location or Manual find location).");
+      return;
+    }
+    setWebsiteBusy(true);
+    setMsg(null);
+    try {
+      const params = new URLSearchParams({
+        name,
+        city: town.trim() || "Manchester",
+        lat: String(form.lat),
+        lng: String(form.lng),
+      });
+      const res = await fetch(`/api/place-website?${params}`, {
+        credentials: "same-origin",
+      });
+      let data: { websiteUrl?: string | null; error?: string } = {};
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        setMsg("Bad response from website lookup — try again.");
+        return;
+      }
+      if (!res.ok) {
+        setMsg(
+          data.error ??
+            (res.status === 401
+              ? "Not signed in."
+              : `Website lookup failed (${res.status})`)
+        );
+        return;
+      }
+      const w = data.websiteUrl?.trim();
+      if (w) {
+        setForm((f) => ({ ...f, websiteUrl: w }));
+        setMsg("Website filled from Google Places.");
+      } else {
+        setMsg(
+          "No website in Google’s listing for this name/location — try Find website again after adjusting the name, or paste a URL manually."
+        );
+      }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Website lookup failed.");
+    } finally {
+      setWebsiteBusy(false);
+    }
+  }
+
   const applyManualLocation = useCallback(
     async (coords: { lat: number; lng: number }) => {
       const { lat, lng } = coords;
       let label: string | null = null;
-      let placesSite: string | null | undefined;
       let warn: string | null = null;
       const name = form.name.trim();
-      const cityQ = town.trim() || "Manchester";
       try {
         const qs = new URLSearchParams({
           lat: String(lat),
           lng: String(lng),
-          name,
-          city: cityQ,
         });
         const res = await fetch(`/api/reverse-geocode?${qs}`, {
           credentials: "same-origin",
         });
         let data: {
           label?: string | null;
-          websiteUrl?: string | null;
           error?: string;
         } = {};
         try {
@@ -247,7 +303,6 @@ export default function AdminDashboard({
         }
         if (res.ok) {
           label = data.label ?? null;
-          placesSite = data.websiteUrl;
         } else {
           warn = data.error ?? `Reverse lookup failed (${res.status}).`;
         }
@@ -265,20 +320,18 @@ export default function AdminDashboard({
         geocodeLabel:
           label ?? `Pin at ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
         googleMapsUrl: mapsUrl,
-        websiteUrl: placesSite ?? suggestedSite ?? f.websiteUrl,
+        websiteUrl: suggestedSite ?? f.websiteUrl,
       }));
       setManualMapOpen(false);
       setMsg(
         warn
           ? `Location saved from map. ${warn}`
-          : placesSite
-            ? "Location set from map (address + website from Google Places)."
-            : label
-              ? "Location set from map (address matched)."
-              : "Location set from map."
+          : label
+            ? "Location set from map (address matched). Use Find website if you need the site URL."
+            : "Location set from map. Use Find website if you need the site URL."
       );
     },
-    [form.name, town]
+    [form.name]
   );
 
   async function save() {
@@ -304,6 +357,8 @@ export default function AdminDashboard({
         lng: form.lng,
         geocodeSource: form.geocodeSource,
         geocodeLabel: form.geocodeLabel,
+        lunch: form.lunch,
+        dinner: form.dinner,
       };
 
       if (selectedId === "new") {
@@ -576,18 +631,28 @@ export default function AdminDashboard({
             </label>
             <label className="min-w-0 sm:col-span-2">
               <span className="text-xs text-muted">Website</span>
-              <input
-                className={fieldBase}
-                inputMode="url"
-                value={form.websiteUrl ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    websiteUrl: e.target.value || null,
-                  }))
-                }
-                placeholder="https://…"
-              />
+              <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-2">
+                <input
+                  className={`${fieldBase} mt-0 sm:min-w-0 sm:flex-1`}
+                  inputMode="url"
+                  value={form.websiteUrl ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      websiteUrl: e.target.value || null,
+                    }))
+                  }
+                  placeholder="https://…"
+                />
+                <button
+                  type="button"
+                  disabled={websiteBusy}
+                  onClick={() => void findWebsite()}
+                  className="min-h-11 shrink-0 touch-manipulation rounded-lg border border-white/20 bg-surface-elevated px-3 py-2.5 text-sm font-medium hover:bg-white/10 disabled:opacity-50 sm:min-h-0 sm:min-w-[140px] sm:py-2"
+                >
+                  {websiteBusy ? "Looking up…" : "Find website"}
+                </button>
+              </div>
               {suggestedWebsite ? (
                 <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-2 text-xs">
                   <span className="shrink-0 font-medium text-sky-200/90">
@@ -639,6 +704,33 @@ export default function AdminDashboard({
             <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2">
               Your review
             </p>
+            <div className="sm:col-span-2">
+              <span className="text-xs text-muted">Meal tags</span>
+              <div className="mt-2 flex flex-wrap gap-4">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-white/25 bg-background/80 text-sky-600 focus:ring-sky-500/40"
+                    checked={form.lunch}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, lunch: e.target.checked }))
+                    }
+                  />
+                  Lunch
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-white/25 bg-background/80 text-sky-600 focus:ring-sky-500/40"
+                    checked={form.dinner}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, dinner: e.target.checked }))
+                    }
+                  />
+                  Dinner
+                </label>
+              </div>
+            </div>
             <label className="min-w-0 sm:col-span-2">
               <span className="text-xs text-muted">Cuisine / type</span>
               <input

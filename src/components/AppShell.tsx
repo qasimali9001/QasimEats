@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Review, ReviewFilters } from "@/lib/types";
+import type { Review } from "@/lib/types";
+import { DEFAULT_REVIEW_FILTERS } from "@/lib/types";
 import { filterReviews } from "@/lib/filterReviews";
 import { FiltersBar } from "@/components/FiltersBar";
 import { MapView } from "@/components/MapView";
@@ -9,15 +10,6 @@ import { Sidebar } from "@/components/Sidebar";
 
 type Props = {
   reviewsPromise: Promise<Review[]>;
-};
-
-const defaultFilters: ReviewFilters = {
-  query: "",
-  cuisineGroups: [],
-  dishTypes: [],
-  priceRanges: [],
-  minRating: 0,
-  includeUnlocated: false,
 };
 
 function uniqueSorted(values: string[]) {
@@ -28,7 +20,7 @@ function uniqueSorted(values: string[]) {
 
 export function AppShell({ reviewsPromise }: Props) {
   const [allReviews, setAllReviews] = useState<Review[] | null>(null);
-  const [filters, setFilters] = useState<ReviewFilters>(defaultFilters);
+  const [filters, setFilters] = useState(DEFAULT_REVIEW_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,6 +46,11 @@ export function AppShell({ reviewsPromise }: Props) {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [allReviews]);
+
+  const locatedReviews = useMemo(
+    () => (allReviews ?? []).filter((r) => !r.needsLocation),
+    [allReviews]
+  );
 
   const visibleReviews = useMemo(() => {
     if (!allReviews) return [];
@@ -88,10 +85,12 @@ export function AppShell({ reviewsPromise }: Props) {
 
       <div className="relative z-20 shrink-0 bg-surface/80">
         <FiltersBar
+          reviews={locatedReviews}
           cuisineGroups={cuisineGroups}
           dishTypes={dishTypeOptions}
           filters={filters}
           onChange={setFilters}
+          onPickRestaurant={setSelectedId}
         />
       </div>
 

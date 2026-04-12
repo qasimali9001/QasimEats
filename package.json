@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx scripts/seed-from-csv.ts",
+    "db:tag-all-lunch": "tsx scripts/tag-all-lunch.ts",
     "csv:add-websites": "tsx scripts/add-websites.ts",
     "hash-password": "node scripts/hash-password.mjs"
   },

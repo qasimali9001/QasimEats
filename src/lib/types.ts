@@ -31,7 +31,13 @@ export type Review = {
     label?: string;
     importance?: number;
   };
+  /** Good for lunch / daytime visit */
+  lunch: boolean;
+  /** Good for dinner / evening visit */
+  dinner: boolean;
 };
+
+export type MealTag = "lunch" | "dinner";
 
 export type ReviewFilters = {
   query: string;
@@ -40,4 +46,16 @@ export type ReviewFilters = {
   priceRanges: PriceRangeId[];
   minRating: number;
   includeUnlocated: boolean;
+  /** Empty = any. If set, show places that match at least one selected tag. */
+  mealTags: MealTag[];
+};
+
+export const DEFAULT_REVIEW_FILTERS: ReviewFilters = {
+  query: "",
+  cuisineGroups: [],
+  dishTypes: [],
+  priceRanges: [],
+  minRating: 0,
+  includeUnlocated: false,
+  mealTags: [],
 };

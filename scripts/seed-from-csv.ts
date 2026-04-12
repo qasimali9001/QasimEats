@@ -60,6 +60,8 @@ async function main() {
       lng: r.location?.lng ?? null,
       geocodeSource: r.geocode?.source ?? null,
       geocodeLabel: r.geocode?.label ?? null,
+      lunch: r.lunch,
+      dinner: r.dinner,
       createdAt: now,
       updatedAt: now,
     };
@@ -84,6 +86,8 @@ async function main() {
           lng: row.lng,
           geocodeSource: row.geocodeSource,
           geocodeLabel: row.geocodeLabel,
+          lunch: row.lunch,
+          dinner: row.dinner,
           updatedAt: now,
         },
       });
