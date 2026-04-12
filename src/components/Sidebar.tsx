@@ -8,7 +8,6 @@ type Props = {
   review: Review | null;
   open?: boolean;
   onClose: () => void;
-  children?: React.ReactNode;
 };
 
 function Stars({ rating }: { rating: number | null }) {
@@ -39,7 +38,7 @@ function Stars({ rating }: { rating: number | null }) {
   );
 }
 
-export function Sidebar({ review, open, onClose, children }: Props) {
+export function Sidebar({ review, open, onClose }: Props) {
   const isOpen = open ?? Boolean(review);
   const websiteUrl = normalizeHttpUrl(review?.websiteUrl);
   const menuUrl = normalizeHttpUrl(review?.menuUrl);
@@ -61,7 +60,7 @@ export function Sidebar({ review, open, onClose, children }: Props) {
               QasimEats
             </div>
             <h2 className="truncate text-lg font-semibold text-foreground">
-              {review?.name ?? "Resolve locations"}
+              {review?.name ?? "Details"}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               {review ? (
@@ -79,9 +78,7 @@ export function Sidebar({ review, open, onClose, children }: Props) {
                   <Stars rating={review.rating ?? null} />
                 </>
               ) : (
-                <span>
-                  Auto-geocode by name (Manchester, UK) or click the map to set a pin.
-                </span>
+                <span>Select a pin on the map.</span>
               )}
             </div>
           </div>
@@ -170,11 +167,11 @@ export function Sidebar({ review, open, onClose, children }: Props) {
                   {review.review || "—"}
                 </p>
               </div>
-
-              {children}
             </div>
           ) : (
-            <div className="space-y-5">{children}</div>
+            <div className="space-y-5 text-sm text-muted">
+              Select a restaurant on the map to see details.
+            </div>
           )}
         </div>
       </div>

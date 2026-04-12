@@ -12,8 +12,6 @@ type Props = {
   reviews: Review[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
-  onSetLocation?: (id: string, location: LatLng) => void;
-  resolveMode?: boolean;
 };
 
 const manchester: LatLng = { lat: 53.4808, lng: -2.2426 };
@@ -64,23 +62,13 @@ function pinSvg(selected: boolean, rating: number | null) {
   `;
 }
 
-export function MapView({
-  reviews,
-  selectedId,
-  onSelect,
-  onSetLocation,
-  resolveMode = false,
-}: Props) {
+export function MapView({ reviews, selectedId, onSelect }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
   /** Keep map init effect stable: never depend on selectedId / callback identity or the map remounts → black flash. */
   const selectedIdRef = useRef(selectedId);
-  const resolveModeRef = useRef(resolveMode);
-  const onSetLocationRef = useRef(onSetLocation);
   selectedIdRef.current = selectedId;
-  resolveModeRef.current = resolveMode;
-  onSetLocationRef.current = onSetLocation;
 
   const [view, setView] = useState(() => ({
     center: [manchester.lng, manchester.lat] as [number, number],
@@ -162,13 +150,6 @@ export function MapView({
       setView({ center: [c.lng, c.lat], zoom: map.getZoom() });
     });
 
-    map.on("click", (e) => {
-      if (!resolveModeRef.current) return;
-      const id = selectedIdRef.current;
-      if (!id) return;
-      onSetLocationRef.current?.(id, { lat: e.lngLat.lat, lng: e.lngLat.lng });
-    });
-
     mapRef.current = map;
 
     return () => {
@@ -176,7 +157,7 @@ export function MapView({
       map.remove();
       mapRef.current = null;
     };
-    // Map must mount once; selection/callbacks use refs above.
+    // Map must mount once; selection uses refs above.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, []);
 
@@ -242,11 +223,6 @@ export function MapView({
         ref={containerRef}
         className="h-full min-h-[280px] w-full touch-manipulation overflow-hidden md:min-h-0"
       />
-      {resolveMode ? (
-        <div className="pointer-events-none absolute left-4 top-4 rounded-xl border border-white/15 bg-surface/95 px-3 py-2 text-sm text-foreground shadow-lg backdrop-blur-md">
-          Click the map to set the selected restaurant&apos;s location.
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -127,17 +127,6 @@ export function FiltersBar({
             className="w-full rounded-xl border border-white/15 bg-background/80 px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted focus:border-sky-400/40 focus:ring-1 focus:ring-sky-400/20"
           />
         </div>
-        <label className="flex shrink-0 items-center gap-2 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={filters.includeUnlocated}
-            onChange={(e) =>
-              onChange({ ...filters, includeUnlocated: e.target.checked })
-            }
-            className="h-4 w-4 rounded border-white/25 bg-background/60"
-          />
-          Include unlocated
-        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
