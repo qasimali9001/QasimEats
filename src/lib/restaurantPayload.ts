@@ -3,6 +3,10 @@ import type { restaurants } from "@/db/schema";
 export type RestaurantUpsert = {
   name: string;
   cuisine: string;
+  /** Map filter cuisine label; empty = derive from `cuisine` text. */
+  cuisineTag?: string;
+  /** Explicit dish tags for filters (merged with keyword inference). */
+  dishTags?: string[];
   price: string;
   whatIOrdered: string;
   distanceText: string;
@@ -48,6 +52,20 @@ export function parseRestaurantBody(
   const out: Partial<RestaurantUpsert> & { name?: string } = {};
   if (name) out.name = name;
   if ("cuisine" in o) out.cuisine = str(o.cuisine);
+  if ("cuisineTag" in o) out.cuisineTag = str(o.cuisineTag);
+  if ("dishTags" in o) {
+    const v = o.dishTags;
+    if (v === null || v === undefined) {
+      out.dishTags = [];
+    } else if (Array.isArray(v)) {
+      out.dishTags = v
+        .filter((x): x is string => typeof x === "string")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else {
+      throw new Error("dishTags must be an array of strings");
+    }
+  }
   if ("price" in o) out.price = str(o.price);
   if ("whatIOrdered" in o) out.whatIOrdered = str(o.whatIOrdered);
   if ("distanceText" in o) out.distanceText = str(o.distanceText);
@@ -107,6 +125,8 @@ export function snapshotRow(
     id: row.id,
     name: row.name,
     cuisine: row.cuisine,
+    cuisineTag: row.cuisineTag,
+    dishTags: row.dishTags,
     price: row.price,
     whatIOrdered: row.whatIOrdered,
     distanceText: row.distanceText,

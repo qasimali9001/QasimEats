@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { ManualLocationMapModal } from "@/components/admin/ManualLocationMapModal";
 import { googleMapsUrlFromLatLng } from "@/lib/mapsLinks";
+import { DishTagsEditor } from "@/components/admin/DishTagsEditor";
+import { TagCombobox } from "@/components/admin/TagCombobox";
 import { COUNTRY_SELECT_OPTIONS } from "@/lib/countryCodes";
+import { parseDishTagsJson } from "@/lib/dishTagsJson";
+import { extractDishTypes } from "@/lib/foodMeta";
 import {
   formatUkDateFromIso,
   parseUkDateToIso,
@@ -17,6 +21,11 @@ import {
 type Row = {
   id: string;
   name: string;
+  /** Canonical cuisine label for filters; mirrored into `cuisine` on save. */
+  cuisineTag: string;
+  /** JSON array string from API */
+  dishTags: string;
+  /** Legacy/detail column; kept in sync with `cuisineTag` when saving from admin. */
   cuisine: string;
   price: string;
   whatIOrdered: string;
@@ -38,14 +47,20 @@ type Row = {
   updatedAt: string;
 };
 
-type FormFields = Omit<Row, "id" | "createdAt" | "updatedAt" | "entryDate"> & {
+type FormFields = Omit<
+  Row,
+  "id" | "createdAt" | "updatedAt" | "entryDate" | "dishTags" | "cuisine"
+> & {
   /** DD/MM/YYYY for the date input */
   entryDateUk: string;
+  /** Parsed dish tags for editing */
+  dishTagsList: string[];
 };
 
 const emptyForm = (): FormFields => ({
   name: "",
-  cuisine: "",
+  cuisineTag: "",
+  dishTagsList: [],
   price: "",
   whatIOrdered: "",
   distanceText: "",
@@ -64,9 +79,11 @@ const emptyForm = (): FormFields => ({
 });
 
 function rowToForm(r: Row): FormFields {
+  const tag = r.cuisineTag?.trim() || r.cuisine?.trim() || "";
   return {
     name: r.name,
-    cuisine: r.cuisine,
+    cuisineTag: tag,
+    dishTagsList: parseDishTagsJson(r.dishTags),
     price: r.price,
     whatIOrdered: r.whatIOrdered,
     distanceText: r.distanceText,
@@ -130,6 +147,26 @@ export default function AdminDashboard({
     () => hasExplicitNoWebsite(form.name),
     [form.name]
   );
+
+  /** Only values already stored in the DB (no static keyword lists). */
+  const cuisineSuggestions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of rows) {
+      const tag = r.cuisineTag?.trim();
+      if (tag) s.add(tag);
+      else if (r.cuisine?.trim()) s.add(r.cuisine.trim());
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const dishSuggestions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of rows) {
+      for (const t of parseDishTagsJson(r.dishTags)) s.add(t);
+      for (const t of extractDishTypes(r.cuisine, r.whatIOrdered)) s.add(t);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
 
   const startNew = useCallback(() => {
     setSelectedId("new");
@@ -386,9 +423,12 @@ export default function AdminDashboard({
         return;
       }
 
+      const cuisineLine = form.cuisineTag.trim();
       const payload = {
         name: form.name.trim(),
-        cuisine: form.cuisine,
+        cuisineTag: cuisineLine,
+        dishTags: form.dishTagsList,
+        cuisine: cuisineLine,
         price: form.price,
         whatIOrdered: form.whatIOrdered,
         distanceText: form.distanceText,
@@ -591,7 +631,9 @@ export default function AdminDashboard({
                   ].join(" ")}
                 >
                   <div className="font-medium">{r.name}</div>
-                  <div className="truncate text-xs text-muted">{r.cuisine}</div>
+                  <div className="truncate text-xs text-muted">
+                    {r.cuisineTag?.trim() || r.cuisine || "—"}
+                  </div>
                 </button>
               </li>
             ))}
@@ -830,14 +872,24 @@ export default function AdminDashboard({
                 </label>
               </div>
             </div>
-            <label className="min-w-0 sm:col-span-2">
-              <span className="text-xs text-muted">Cuisine / type</span>
-              <input
+            <div className="min-w-0 sm:col-span-2">
+              <TagCombobox
+                id="admin-cuisine-tag"
+                label="Cuisine"
+                value={form.cuisineTag}
+                onChange={(v) => setForm((f) => ({ ...f, cuisineTag: v }))}
+                suggestions={cuisineSuggestions}
+                placeholder="Choose from list or type a new cuisine…"
+                hint="Saved to the database and used for map cuisine filters. New tags appear for everyone after you save."
                 className={fieldBase}
-                value={form.cuisine}
-                onChange={(e) => setForm((f) => ({ ...f, cuisine: e.target.value }))}
               />
-            </label>
+            </div>
+            <DishTagsEditor
+              tags={form.dishTagsList}
+              onChange={(dishTagsList) => setForm((f) => ({ ...f, dishTagsList }))}
+              suggestions={dishSuggestions}
+              inputClassName={fieldBase}
+            />
             <label className="min-w-0">
               <span className="text-xs text-muted">Price (raw text)</span>
               <input

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { restaurants } from "@/db/schema";
 import { writeAudit } from "@/lib/audit";
+import { stringifyDishTags } from "@/lib/dishTagsJson";
 import { parseRestaurantBody, snapshotRow } from "@/lib/restaurantPayload";
 import { requireAdminSession } from "@/lib/session";
 
@@ -69,6 +70,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
     ...existing,
     ...(parsed.name !== undefined ? { name: parsed.name } : {}),
     ...(parsed.cuisine !== undefined ? { cuisine: parsed.cuisine } : {}),
+    ...(parsed.cuisineTag !== undefined ? { cuisineTag: parsed.cuisineTag } : {}),
+    ...(parsed.dishTags !== undefined
+      ? { dishTags: stringifyDishTags(parsed.dishTags ?? []) }
+      : {}),
     ...(parsed.price !== undefined ? { price: parsed.price } : {}),
     ...(parsed.whatIOrdered !== undefined
       ? { whatIOrdered: parsed.whatIOrdered }

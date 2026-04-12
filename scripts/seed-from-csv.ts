@@ -48,6 +48,8 @@ async function main() {
       id: r.id,
       name: r.name,
       cuisine: r.cuisine,
+      cuisineTag: "",
+      dishTags: "[]",
       price: r.price,
       whatIOrdered: r.whatIOrdered,
       distanceText: r.distanceText,
@@ -75,6 +77,8 @@ async function main() {
         set: {
           name: row.name,
           cuisine: row.cuisine,
+          cuisineTag: row.cuisineTag,
+          dishTags: row.dishTags,
           price: row.price,
           whatIOrdered: row.whatIOrdered,
           distanceText: row.distanceText,

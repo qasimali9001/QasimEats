@@ -13,6 +13,10 @@ export const restaurants = pgTable("restaurants", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   cuisine: text("cuisine").notNull().default(""),
+  /** Canonical map-filter label; empty = derive group from `cuisine` via rules. */
+  cuisineTag: text("cuisine_tag").notNull().default(""),
+  /** JSON array of dish type tags, e.g. ["Ramen","Gyoza"]. Merged with keyword inference. */
+  dishTags: text("dish_tags").notNull().default("[]"),
   price: text("price").notNull().default(""),
   whatIOrdered: text("what_i_ordered").notNull().default(""),
   distanceText: text("distance_text").notNull().default(""),

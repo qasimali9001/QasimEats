@@ -9,6 +9,8 @@ export const runtime = "nodejs";
 const HEADERS = [
   "Id",
   "Name",
+  "Cuisine tag",
+  "Dish tags (JSON)",
   "Cuisine/Type",
   "Price",
   "What I Ordered",
@@ -63,6 +65,8 @@ export async function GET() {
       rowToCsvLine([
         r.id,
         r.name,
+        r.cuisineTag ?? "",
+        r.dishTags ?? "[]",
         r.cuisine,
         r.price,
         r.whatIOrdered,

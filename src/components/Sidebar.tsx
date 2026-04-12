@@ -85,8 +85,14 @@ export function Sidebar({ review, open, onClose }: Props) {
                   <span className="font-medium text-foreground/90">
                     {review.cuisineGroup}
                   </span>
-                  <span className="text-white/25">·</span>
-                  <span className="text-foreground/80">{review.cuisine}</span>
+                  {review.cuisine.trim() &&
+                  review.cuisine.trim().toLowerCase() !==
+                    review.cuisineGroup.trim().toLowerCase() ? (
+                    <>
+                      <span className="text-white/25">·</span>
+                      <span className="text-foreground/80">{review.cuisine}</span>
+                    </>
+                  ) : null}
                   <span className="text-white/25">·</span>
                   <span className="tabular-nums text-foreground/90">
                     {formatPricePounds(review.pricePounds)}

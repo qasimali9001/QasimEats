@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { restaurants } from "@/db/schema";
 import { writeAudit } from "@/lib/audit";
+import { stringifyDishTags } from "@/lib/dishTagsJson";
 import { isoDateLocal } from "@/lib/entryDate";
 import { parseRestaurantBody, snapshotRow } from "@/lib/restaurantPayload";
 import { requireAdminSession } from "@/lib/session";
@@ -61,6 +62,8 @@ export async function POST(req: Request) {
     id,
     name: parsed.name,
     cuisine: parsed.cuisine ?? "",
+    cuisineTag: parsed.cuisineTag ?? "",
+    dishTags: stringifyDishTags(parsed.dishTags ?? []),
     price: parsed.price ?? "",
     whatIOrdered: parsed.whatIOrdered ?? "",
     distanceText: parsed.distanceText ?? "",

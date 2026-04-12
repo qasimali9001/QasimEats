@@ -126,6 +126,11 @@ const DISH_KEYWORDS: Array<{ re: RegExp; label: string }> = [
   { re: /\bgyro\b/i, label: "Gyro" },
 ];
 
+/** Labels from keyword rules — useful for admin dish-type suggestions. */
+export const KNOWN_DISH_TYPE_LABELS: string[] = [
+  ...new Set(DISH_KEYWORDS.map((k) => k.label)),
+].sort((a, b) => a.localeCompare(b));
+
 /** Dish / format tags (e.g. Burrito, Ramen) from cuisine + order text. */
 export function extractDishTypes(cuisine: string, whatIOrdered: string): string[] {
   const hay = `${cuisine}\n${whatIOrdered}`;
