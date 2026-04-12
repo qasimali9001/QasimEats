@@ -44,9 +44,8 @@ export function DishTagsEditor({
     <div className="min-w-0 sm:col-span-2">
       <span className="text-xs text-muted">Dish types</span>
       <p className="mt-0.5 text-[11px] text-muted">
-        Multiple tags allowed (e.g. Ramen + Gyoza). Stored in the database and
-        used for map filters, together with any tags auto-detected from your
-        order text below.
+        Multiple tags allowed (e.g. Ramen + Gyoza). Only these tags are used for
+        map filters — nothing is inferred from your order text.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {tags.map((t) => (

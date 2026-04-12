@@ -1,6 +1,6 @@
 "use client";
 
-import { formatPricePounds } from "@/lib/foodMeta";
+import { formatReviewPrice } from "@/lib/foodMeta";
 import { googleMapsLinkForReview, normalizeHttpUrl } from "@/lib/mapsLinks";
 import type { Review } from "@/lib/types";
 
@@ -95,7 +95,7 @@ export function Sidebar({ review, open, onClose }: Props) {
                   ) : null}
                   <span className="text-white/25">·</span>
                   <span className="tabular-nums text-foreground/90">
-                    {formatPricePounds(review.pricePounds)}
+                    {formatReviewPrice(review.price, review.pricePounds)}
                   </span>
                   <span className="text-white/25">·</span>
                   <Stars rating={review.rating ?? null} />

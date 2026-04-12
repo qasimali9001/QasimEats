@@ -1,24 +1,17 @@
 import { parseDishTagsJson } from "@/lib/dishTagsJson";
-import {
-  cuisineToGroup,
-  extractDishTypes,
-  parsePriceToPounds,
-} from "@/lib/foodMeta";
+import { cuisineToGroup, parsePriceToPounds } from "@/lib/foodMeta";
 import type { Review } from "@/lib/types";
 import type { restaurants } from "@/db/schema";
 
 export type RestaurantRow = typeof restaurants.$inferSelect;
 
 export function restaurantRowToReview(row: RestaurantRow): Review {
-  const pricePounds = parsePriceToPounds(row.cuisine);
+  const pricePounds = parsePriceToPounds(row.price);
   const cuisineGroup = row.cuisineTag?.trim()
     ? row.cuisineTag.trim()
     : cuisineToGroup(row.cuisine);
-  const inferred = extractDishTypes(row.cuisine, row.whatIOrdered);
-  const explicit = parseDishTagsJson(row.dishTags);
-  const dishTypes = [...new Set([...explicit, ...inferred])].sort((a, b) =>
-    a.localeCompare(b)
-  );
+  /** Only explicit tags from `dish_tags` — no keyword inference from order text. */
+  const dishTypes = parseDishTagsJson(row.dishTags);
   const hasLoc = row.lat != null && row.lng != null;
 
   const geocode: Review["geocode"] =

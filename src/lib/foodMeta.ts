@@ -5,16 +5,34 @@ export function parsePriceToPounds(raw: string): number | null {
   const s = raw.trim();
   if (!s) return null;
 
-  const lower = s.toLowerCase();
-  if (
-    /\bfree\b/.test(lower) &&
-    !/£\s*[\d.]/.test(s)
-  ) {
-    return 0;
+  const normalized = s
+    .replace(/~/g, " ")
+    .replace(/\u00a3/g, "£")
+    .replace(/₤/g, "£")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const lower = normalized.toLowerCase();
+
+  const withPound = normalized.match(/£\s*([\d]+(?:\.[\d]+)?)/);
+  if (withPound) {
+    const n = parseFloat(withPound[1]);
+    if (Number.isFinite(n)) return n;
   }
 
-  const poundMatch = s.match(/£\s*~?\s*([\d]+(?:\.[\d]+)?)/);
-  if (poundMatch) return parseFloat(poundMatch[1]);
+  const trailingPound = normalized.match(/([\d]+(?:\.[\d]+)?)\s*£/);
+  if (trailingPound) {
+    const n = parseFloat(trailingPound[1]);
+    if (Number.isFinite(n)) return n;
+  }
+
+  const firstNum = normalized.match(/([\d]+(?:\.[\d]+)?)/);
+  if (firstNum) {
+    const n = parseFloat(firstNum[1]);
+    if (Number.isFinite(n)) return n;
+  }
+
+  if (/\bfree\b/.test(lower)) return 0;
 
   return null;
 }
@@ -26,6 +44,13 @@ export function formatPricePounds(pounds: number | null): string {
   const rounded = Math.round(pounds * 100) / 100;
   if (Number.isInteger(rounded)) return `£${rounded}`;
   return `£${rounded.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+/** Prefer parsed £ amount; otherwise show raw price text (e.g. unparseable notes). */
+export function formatReviewPrice(price: string, pricePounds: number | null): string {
+  if (pricePounds != null) return formatPricePounds(pricePounds);
+  const t = price.trim();
+  return t.length ? t : "—";
 }
 
 export function priceRangeForPounds(

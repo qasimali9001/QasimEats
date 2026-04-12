@@ -1,5 +1,6 @@
 import { parse } from "csv-parse/sync";
-import { cuisineToGroup, extractDishTypes, parsePriceToPounds } from "./foodMeta";
+import { parseDishTagsJson } from "./dishTagsJson";
+import { cuisineToGroup, parsePriceToPounds } from "./foodMeta";
 import { stableReviewId } from "./stableId";
 import { parseGoogleMapsLatLng } from "./parseGoogleMaps";
 import type { Review } from "./types";
@@ -116,7 +117,15 @@ export function parseReviewsCsv(csvText: string): Review[] {
 
     const pricePounds = parsePriceToPounds(price);
     const cuisineGroup = cuisineToGroup(cuisine);
-    const dishTypes = extractDishTypes(cuisine, whatIOrdered);
+    const dishTagsRaw = pick(row, [
+      "Dish tags (JSON)",
+      "Dish tags",
+      "dish_tags",
+      "DishTags",
+    ]);
+    const dishTypes = dishTagsRaw
+      ? parseDishTagsJson(dishTagsRaw)
+      : [];
 
     const id =
       idFromCsv.trim().length > 0

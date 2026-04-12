@@ -7,7 +7,6 @@ import { DishTagsEditor } from "@/components/admin/DishTagsEditor";
 import { TagCombobox } from "@/components/admin/TagCombobox";
 import { COUNTRY_SELECT_OPTIONS } from "@/lib/countryCodes";
 import { parseDishTagsJson } from "@/lib/dishTagsJson";
-import { extractDishTypes } from "@/lib/foodMeta";
 import {
   formatUkDateFromIso,
   parseUkDateToIso,
@@ -163,7 +162,6 @@ export default function AdminDashboard({
     const s = new Set<string>();
     for (const r of rows) {
       for (const t of parseDishTagsJson(r.dishTags)) s.add(t);
-      for (const t of extractDishTypes(r.cuisine, r.whatIOrdered)) s.add(t);
     }
     return Array.from(s).sort((a, b) => a.localeCompare(b));
   }, [rows]);
