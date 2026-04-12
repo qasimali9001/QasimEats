@@ -29,6 +29,11 @@ export const restaurants = pgTable("restaurants", {
   lng: doublePrecision("lng"),
   geocodeSource: text("geocode_source"),
   geocodeLabel: text("geocode_label"),
+  /**
+   * ISO2 country for this place (`gb` / empty = UK — no suffix in map search).
+   * Non-UK values show as "Name (Country)" in the restaurant search list.
+   */
+  countryIso2: text("country_iso2").notNull().default(""),
   lunch: boolean("lunch").notNull().default(false),
   dinner: boolean("dinner").notNull().default(false),
   /** Calendar date of the visit / review entry (optional for legacy rows). */

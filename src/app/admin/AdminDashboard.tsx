@@ -5,7 +5,10 @@ import { ManualLocationMapModal } from "@/components/admin/ManualLocationMapModa
 import { googleMapsUrlFromLatLng } from "@/lib/mapsLinks";
 import { DishTagsEditor } from "@/components/admin/DishTagsEditor";
 import { TagCombobox } from "@/components/admin/TagCombobox";
-import { COUNTRY_SELECT_OPTIONS } from "@/lib/countryCodes";
+import {
+  COUNTRY_SELECT_OPTIONS,
+  countryIso2ToFormValue,
+} from "@/lib/countryCodes";
 import { parseDishTagsJson } from "@/lib/dishTagsJson";
 import {
   formatUkDateFromIso,
@@ -38,6 +41,8 @@ type Row = {
   lng: number | null;
   geocodeSource: string | null;
   geocodeLabel: string | null;
+  /** ISO2; empty = UK */
+  countryIso2: string;
   lunch: boolean;
   dinner: boolean;
   /** ISO YYYY-MM-DD from DB */
@@ -48,7 +53,13 @@ type Row = {
 
 type FormFields = Omit<
   Row,
-  "id" | "createdAt" | "updatedAt" | "entryDate" | "dishTags" | "cuisine"
+  | "id"
+  | "createdAt"
+  | "updatedAt"
+  | "entryDate"
+  | "dishTags"
+  | "cuisine"
+  | "countryIso2"
 > & {
   /** DD/MM/YYYY for the date input */
   entryDateUk: string;
@@ -177,6 +188,7 @@ export default function AdminDashboard({
   const editRow = useCallback((r: Row) => {
     setSelectedId(r.id);
     setForm(rowToForm(r));
+    setCountryCode(countryIso2ToFormValue(r.countryIso2));
     setMsg(null);
   }, []);
 
@@ -442,6 +454,7 @@ export default function AdminDashboard({
         lunch: form.lunch,
         dinner: form.dinner,
         entryDate: entryIso,
+        countryIso2: countryCode,
       };
 
       if (selectedId === "new") {
@@ -700,8 +713,10 @@ export default function AdminDashboard({
                 ))}
               </select>
               <span className="mt-1 block text-[11px] text-muted">
-                Default UK + Manchester-style local bias. Choose Worldwide to search
-                OpenStreetMap / Google without a country filter.
+                Saved on this entry for geocoding and for the public map search list
+                (non-UK places show as Name (Country)). UK stays as the name only.
+                Choose Worldwide to search OpenStreetMap / Google without a country
+                filter.
               </span>
             </label>
             <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 sm:justify-end">

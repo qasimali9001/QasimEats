@@ -35,6 +35,10 @@ export type Review = {
   lunch: boolean;
   /** Good for dinner / evening visit */
   dinner: boolean;
+  /**
+   * ISO2 country (`gb`/empty = UK). Non-UK entries show as "Name (Country)" in search.
+   */
+  countryIso2?: string;
 };
 
 export type MealTag = "lunch" | "dinner";

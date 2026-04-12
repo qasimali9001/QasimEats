@@ -5,6 +5,7 @@ import {
   PRICE_RANGE_LABEL,
   PRICE_RANGE_ORDER,
 } from "@/lib/foodMeta";
+import { reviewSearchMenuLabel } from "@/lib/countryCodes";
 import {
   DEFAULT_REVIEW_FILTERS,
   type MealTag,
@@ -211,8 +212,8 @@ function FilterSection({
   );
 }
 
-function includesNameCI(name: string, needle: string) {
-  return name.toLowerCase().includes(needle.toLowerCase());
+function includesNameCI(haystack: string, needle: string) {
+  return haystack.toLowerCase().includes(needle.toLowerCase());
 }
 
 type SearchSort = "name" | "rating";
@@ -220,16 +221,28 @@ type SearchSort = "name" | "rating";
 function sortForDropdown(list: Review[], sort: SearchSort): Review[] {
   const copy = [...list];
   if (sort === "name") {
-    copy.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    copy.sort((a, b) =>
+      reviewSearchMenuLabel(a.name, a.countryIso2).localeCompare(
+        reviewSearchMenuLabel(b.name, b.countryIso2),
+        undefined,
+        { sensitivity: "base" }
+      )
+    );
   } else {
     copy.sort((a, b) => {
       const ra = a.rating;
       const rb = b.rating;
-      if (ra == null && rb == null) return a.name.localeCompare(b.name);
+      if (ra == null && rb == null) {
+        return reviewSearchMenuLabel(a.name, a.countryIso2).localeCompare(
+          reviewSearchMenuLabel(b.name, b.countryIso2)
+        );
+      }
       if (ra == null) return 1;
       if (rb == null) return -1;
       if (rb !== ra) return rb - ra;
-      return a.name.localeCompare(b.name);
+      return reviewSearchMenuLabel(a.name, a.countryIso2).localeCompare(
+        reviewSearchMenuLabel(b.name, b.countryIso2)
+      );
     });
   }
   return copy;
@@ -254,7 +267,9 @@ export function FiltersBar({
 
   const dropdownList = useMemo(() => {
     const named = q
-      ? reviews.filter((r) => includesNameCI(r.name, q))
+      ? reviews.filter((r) =>
+          includesNameCI(reviewSearchMenuLabel(r.name, r.countryIso2), q)
+        )
       : reviews;
     return sortForDropdown(named, searchSort);
   }, [reviews, q, searchSort]);
@@ -342,14 +357,17 @@ export function FiltersBar({
                         role="option"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
-                          onChange({ ...filters, query: r.name });
+                          onChange({
+                            ...filters,
+                            query: reviewSearchMenuLabel(r.name, r.countryIso2),
+                          });
                           onPickRestaurant?.(r.id);
                           setSearchOpen(false);
                         }}
                         className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-white/10"
                       >
                         <span className="min-w-0 flex-1 truncate text-foreground">
-                          {r.name}
+                          {reviewSearchMenuLabel(r.name, r.countryIso2)}
                         </span>
                         <span className="inline-flex w-[2.75rem] shrink-0 justify-end tabular-nums text-xs text-muted">
                           {r.rating != null ? (

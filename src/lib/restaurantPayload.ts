@@ -1,4 +1,5 @@
 import type { restaurants } from "@/db/schema";
+import { countryIso2ToStorage } from "@/lib/countryCodes";
 
 export type RestaurantUpsert = {
   name: string;
@@ -23,6 +24,8 @@ export type RestaurantUpsert = {
   dinner?: boolean;
   /** ISO date YYYY-MM-DD */
   entryDate?: string | null;
+  /** ISO2; empty/`gb` = UK */
+  countryIso2?: string;
 };
 
 function str(v: unknown, fallback = ""): string {
@@ -115,6 +118,9 @@ export function parseRestaurantBody(
       throw new Error("entryDate must be a string or null");
     }
   }
+  if ("countryIso2" in o) {
+    out.countryIso2 = countryIso2ToStorage(str(o.countryIso2));
+  }
   return out;
 }
 
@@ -142,6 +148,7 @@ export function snapshotRow(
     lunch: row.lunch,
     dinner: row.dinner,
     entryDate: row.entryDate ?? null,
+    countryIso2: row.countryIso2,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

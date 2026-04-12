@@ -42,5 +42,6 @@ export function restaurantRowToReview(row: RestaurantRow): Review {
     geocode,
     lunch: row.lunch,
     dinner: row.dinner,
+    countryIso2: row.countryIso2?.trim() || undefined,
   };
 }

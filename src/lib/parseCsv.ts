@@ -1,4 +1,5 @@
 import { parse } from "csv-parse/sync";
+import { countryIso2ToStorage } from "./countryCodes";
 import { parseDishTagsJson } from "./dishTagsJson";
 import { cuisineToGroup, parsePriceToPounds } from "./foodMeta";
 import { stableReviewId } from "./stableId";
@@ -114,6 +115,13 @@ export function parseReviewsCsv(csvText: string): Review[] {
       "Geocode Source",
     ]);
     const geocodeLabelPick = pick(row, ["Geocode label", "geocode_label", "Geocode Label"]);
+    const countryIso2Raw = pick(row, [
+      "Country ISO2",
+      "country_iso2",
+      "Country",
+      "country",
+    ]);
+    const countryIso2 = countryIso2ToStorage(countryIso2Raw);
 
     const pricePounds = parsePriceToPounds(price);
     const cuisineGroup = cuisineToGroup(cuisine);
@@ -179,6 +187,7 @@ export function parseReviewsCsv(csvText: string): Review[] {
       geocode,
       lunch: false,
       dinner: false,
+      ...(countryIso2 ? { countryIso2 } : {}),
     };
   });
 }

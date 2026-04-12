@@ -1,3 +1,4 @@
+import { reviewSearchMenuLabel } from "./countryCodes";
 import { priceRangeForPounds } from "./foodMeta";
 import type { Review, ReviewFilters } from "./types";
 
@@ -36,7 +37,8 @@ export function filterReviews(reviews: Review[], filters: ReviewFilters) {
     }
 
     if (q) {
-      if (!includesCI(r.name, q)) return false;
+      const label = reviewSearchMenuLabel(r.name, r.countryIso2);
+      if (!includesCI(label, q)) return false;
     }
 
     if (filters.mealTags.length) {

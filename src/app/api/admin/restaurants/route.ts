@@ -76,6 +76,7 @@ export async function POST(req: Request) {
     lng: parsed.lng ?? null,
     geocodeSource: parsed.geocodeSource ?? null,
     geocodeLabel: parsed.geocodeLabel ?? null,
+    countryIso2: parsed.countryIso2 ?? "",
     lunch: parsed.lunch ?? false,
     dinner: parsed.dinner ?? false,
     entryDate,

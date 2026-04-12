@@ -55,3 +55,46 @@ export function regionForGooglePlaces(iso2: string | null): string | undefined {
   if (!iso2) return undefined;
   return iso2 === "gb" ? "uk" : iso2;
 }
+
+/** UK / unset — no "(Country)" suffix in search. */
+export function isUkCountryIso2(iso: string | null | undefined): boolean {
+  const s = (iso ?? "").trim().toLowerCase();
+  return !s || s === "gb" || s === "uk";
+}
+
+function countryLabelForSearchSuffix(iso2: string): string {
+  const s = iso2.trim().toLowerCase();
+  if (s === "world") return "Worldwide";
+  const opt = COUNTRY_SELECT_OPTIONS.find((o) => o.value === s);
+  if (opt) return opt.label;
+  return countryLabelForNominatim(s);
+}
+
+/**
+ * Map search dropdown: plain name in the UK; abroad, `Name (France)` etc.
+ */
+export function reviewSearchMenuLabel(
+  name: string,
+  countryIso2: string | null | undefined
+): string {
+  if (isUkCountryIso2(countryIso2)) return name;
+  const raw = (countryIso2 ?? "").trim().toLowerCase();
+  return `${name} (${countryLabelForSearchSuffix(raw)})`;
+}
+
+/** Admin / API: normalize `gb` → stored as UK (empty string). */
+export function countryIso2ToStorage(code: string | null | undefined): string {
+  const s = (code ?? "").trim().toLowerCase();
+  if (!s || s === "gb" || s === "uk") return "";
+  if (s === "world" || s === "worldwide") return "world";
+  if (/^[a-z]{2}$/.test(s)) return s;
+  return "";
+}
+
+/** Load row into country `<select>`: empty/gb → `gb`. */
+export function countryIso2ToFormValue(iso: string | null | undefined): string {
+  const stored = (iso ?? "").trim().toLowerCase();
+  if (!stored || stored === "gb" || stored === "uk") return "gb";
+  if (COUNTRY_SELECT_OPTIONS.some((o) => o.value === stored)) return stored;
+  return "gb";
+}
