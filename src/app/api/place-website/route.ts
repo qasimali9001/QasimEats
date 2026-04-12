@@ -1,3 +1,8 @@
+import {
+  DEFAULT_COUNTRY_CODE,
+  parseCountryCodeParam,
+  regionForGooglePlaces,
+} from "@/lib/countryCodes";
 import { lookupRestaurantWebsite } from "@/lib/lookupRestaurantWebsite";
 import { requireAdminSession } from "@/lib/session";
 
@@ -14,6 +19,9 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const name = (searchParams.get("name") ?? "").trim().slice(0, 180);
   const city = (searchParams.get("city") ?? "").trim().slice(0, 80);
+  const countryIso2 = parseCountryCodeParam(
+    searchParams.get("country") ?? DEFAULT_COUNTRY_CODE
+  );
   const lat = Number(searchParams.get("lat"));
   const lng = Number(searchParams.get("lng"));
 
@@ -50,6 +58,7 @@ export async function GET(req: Request) {
       city,
       lat,
       lng,
+      region: regionForGooglePlaces(countryIso2),
     });
   } catch {
     websiteUrl = null;

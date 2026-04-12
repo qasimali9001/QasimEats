@@ -15,6 +15,8 @@ export async function lookupRestaurantWebsite(opts: {
   city: string;
   lat: number;
   lng: number;
+  /** Google Places ccTLD bias (e.g. `uk` for GB). Omit for worldwide. */
+  region?: string;
 }): Promise<string | null> {
   const apiKey = getPlacesApiKey();
   if (!apiKey) return null;
@@ -32,7 +34,9 @@ export async function lookupRestaurantWebsite(opts: {
     textSearchUrl.searchParams.set("query", query);
     textSearchUrl.searchParams.set("location", `${opts.lat},${opts.lng}`);
     textSearchUrl.searchParams.set("radius", "8000");
-    textSearchUrl.searchParams.set("region", "uk");
+    if (opts.region) {
+      textSearchUrl.searchParams.set("region", opts.region);
+    }
     textSearchUrl.searchParams.set("key", apiKey);
 
     const tsRes = await fetch(textSearchUrl.toString(), { cache: "no-store" });

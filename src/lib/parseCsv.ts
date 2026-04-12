@@ -126,6 +126,7 @@ export function parseReviewsCsv(csvText: string): Review[] {
     const validGeocodeSources = new Set([
       "googleMapsUrl",
       "nominatim",
+      "google_places",
       "csv",
       "manual",
     ]);

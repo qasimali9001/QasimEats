@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ManualLocationMapModal } from "@/components/admin/ManualLocationMapModal";
 import { googleMapsUrlFromLatLng } from "@/lib/mapsLinks";
+import { COUNTRY_SELECT_OPTIONS } from "@/lib/countryCodes";
 import {
   formatUkDateFromIso,
   parseUkDateToIso,
@@ -93,6 +94,8 @@ export default function AdminDashboard({
   const [selectedId, setSelectedId] = useState<string | "new" | null>("new");
   const [form, setForm] = useState<FormFields>(emptyForm());
   const [town, setTown] = useState("Manchester");
+  /** ISO2 `gb` or `world` for Nominatim/Places (see `countryCodes`). */
+  const [countryCode, setCountryCode] = useState("gb");
   const [geoBusy, setGeoBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -132,6 +135,7 @@ export default function AdminDashboard({
     setSelectedId("new");
     setForm(emptyForm());
     setTown("Manchester");
+    setCountryCode("gb");
     setMsg(null);
   }, []);
 
@@ -198,7 +202,7 @@ export default function AdminDashboard({
       const params = new URLSearchParams({
         name,
         city: town.trim() || "Manchester",
-        country: "UK",
+        country: countryCode,
       });
       const res = await fetch(`/api/geocode?${params}`, {
         credentials: "same-origin",
@@ -209,6 +213,7 @@ export default function AdminDashboard({
           lng: number;
           label: string;
           websiteUrl?: string | null;
+          source?: "nominatim" | "google_places";
         };
         error?: string;
       };
@@ -226,14 +231,17 @@ export default function AdminDashboard({
         setMsg("No location found — try a different name or town.");
         return;
       }
-      const { lat, lng, label, websiteUrl: placesSite } = data.result;
+      const { lat, lng, label, websiteUrl: placesSite, source: geoSrc } =
+        data.result;
       const mapsUrl = googleMapsUrlFromLatLng(lat, lng);
       const suggestedSite = getSuggestedWebsite(name);
+      const geocodeSource =
+        geoSrc === "google_places" ? "google_places" : "nominatim";
       setForm((f) => ({
         ...f,
         lat,
         lng,
-        geocodeSource: "nominatim",
+        geocodeSource,
         geocodeLabel: label,
         googleMapsUrl: mapsUrl,
         websiteUrl: placesSite ?? suggestedSite ?? f.websiteUrl,
@@ -241,7 +249,9 @@ export default function AdminDashboard({
       setMsg(
         placesSite
           ? "Location, website (Google Places), and links updated."
-          : "Location and links updated from lookup."
+          : geoSrc === "google_places"
+            ? "Location found via Google Places (no OpenStreetMap match for that query)."
+            : "Location and links updated from lookup."
       );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Geocode request failed.");
@@ -266,6 +276,7 @@ export default function AdminDashboard({
       const params = new URLSearchParams({
         name,
         city: town.trim() || "Manchester",
+        country: countryCode,
         lat: String(form.lat),
         lng: String(form.lng),
       });
@@ -635,7 +646,25 @@ export default function AdminDashboard({
                 placeholder="e.g. Manchester"
               />
             </label>
-            <div className="flex min-w-0 flex-col gap-2 sm:col-span-1 sm:justify-end">
+            <label className="min-w-0 sm:col-span-1">
+              <span className="text-xs text-muted">Country</span>
+              <select
+                className={fieldBase}
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+              >
+                {COUNTRY_SELECT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[11px] text-muted">
+                Default UK + Manchester-style local bias. Choose Worldwide to search
+                OpenStreetMap / Google without a country filter.
+              </span>
+            </label>
+            <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 sm:justify-end">
               <button
                 type="button"
                 disabled={geoBusy}

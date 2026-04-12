@@ -1,3 +1,16 @@
+import {
+  countryLabelForNominatim,
+  DEFAULT_COUNTRY_CODE,
+  parseCountryCodeParam,
+  regionForGooglePlaces,
+} from "@/lib/countryCodes";
+import { geocodeViaGooglePlacesTextSearch } from "@/lib/geocodeGooglePlaces";
+import {
+  buildNominatimQueryVariants,
+  normalizeGeocodePhrase,
+  shouldUseManchesterViewbox,
+  MANCHESTER_VIEWBOX,
+} from "@/lib/geocodeQuery";
 import { lookupRestaurantWebsite } from "@/lib/lookupRestaurantWebsite";
 
 export const runtime = "nodejs";
@@ -8,8 +21,8 @@ type GeocodeResult = {
   label: string;
   importance?: number;
   query?: string;
-  /** Present when Google Places lookup found an official site (requires API key). */
   websiteUrl?: string | null;
+  source?: "nominatim" | "google_places";
 };
 
 function clampQuery(q: string) {
@@ -19,45 +32,61 @@ function clampQuery(q: string) {
 
 let lastCallAt = 0;
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const name = clampQuery(searchParams.get("name") ?? "");
-  const city = clampQuery(searchParams.get("city") ?? "Manchester");
-  const country = clampQuery(searchParams.get("country") ?? "UK");
-
-  if (!name) {
-    return Response.json({ error: "Missing `name`" }, { status: 400 });
-  }
-
-  // Be a good citizen: throttle calls from this server process.
+async function enforceNominatimThrottle(): Promise<void> {
   const now = Date.now();
   const delta = now - lastCallAt;
   if (delta < 1100) {
-    return Response.json(
-      { error: "Rate limited. Try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil((1100 - delta) / 1000)) },
-      }
-    );
+    await new Promise((r) => setTimeout(r, 1100 - delta));
   }
-  lastCallAt = now;
+  lastCallAt = Date.now();
+}
 
-  const q = `${name}, ${city}, ${country}`;
+type NominatimHit = {
+  lat: string;
+  lon: string;
+  display_name: string;
+  importance?: number;
+  class?: string;
+  type?: string;
+};
+
+function pickBestNominatimHit(data: NominatimHit[]): NominatimHit | null {
+  if (!data?.length) return null;
+  const preferred = data.find(
+    (r) =>
+      r.class === "amenity" &&
+      ["restaurant", "cafe", "bar", "fast_food", "pub", "food_court"].includes(
+        r.type ?? ""
+      )
+  );
+  return preferred ?? data[0];
+}
+
+async function nominatimSearch(
+  q: string,
+  options: {
+    boundedManchester: boolean;
+    countryIso2: string | null;
+  }
+): Promise<NominatimHit | null> {
+  await enforceNominatimThrottle();
+
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format", "jsonv2");
-  url.searchParams.set("limit", "1");
+  url.searchParams.set("limit", "5");
   url.searchParams.set("q", q);
   url.searchParams.set("addressdetails", "1");
-  url.searchParams.set("countrycodes", "gb");
-  // Bias hard to Greater Manchester area. (left,top,right,bottom)
-  // This prevents many "not found" cases from snapping to Manchester city center.
-  url.searchParams.set("viewbox", "-2.60,53.60,-2.05,53.35");
-  url.searchParams.set("bounded", "1");
+  if (options.countryIso2) {
+    url.searchParams.set("countrycodes", options.countryIso2.toLowerCase());
+  }
+
+  if (options.boundedManchester) {
+    url.searchParams.set("viewbox", MANCHESTER_VIEWBOX);
+    url.searchParams.set("bounded", "1");
+  }
 
   const res = await fetch(url, {
     headers: {
-      // Nominatim requests a descriptive UA. In Next's fetch, this becomes a normal header.
       "User-Agent":
         "QasimEats/1.0 (https://github.com/qasimali9001/QasimEats; Nominatim geocoding)",
       Accept: "application/json",
@@ -66,32 +95,86 @@ export async function GET(req: Request) {
   });
 
   if (!res.ok) {
-    return Response.json(
-      { error: `Geocode failed (${res.status})` },
-      { status: 502 }
-    );
+    return null;
   }
 
-  const data = (await res.json()) as Array<{
-    lat: string;
-    lon: string;
-    display_name: string;
-    importance?: number;
-  }>;
+  const data = (await res.json()) as NominatimHit[];
+  return pickBestNominatimHit(data);
+}
 
-  const top = data?.[0];
-  if (!top) return Response.json({ result: null });
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const nameRaw = clampQuery(searchParams.get("name") ?? "");
+  const cityRaw = clampQuery(searchParams.get("city") ?? "Manchester");
+  const countryIso2 = parseCountryCodeParam(
+    searchParams.get("country") ?? DEFAULT_COUNTRY_CODE
+  );
 
-  const lat = Number(top.lat);
-  const lng = Number(top.lon);
+  const name = normalizeGeocodePhrase(nameRaw) || nameRaw.trim();
+  const city = normalizeGeocodePhrase(cityRaw) || cityRaw.trim();
+
+  if (!name) {
+    return Response.json({ error: "Missing `name`" }, { status: 400 });
+  }
+
+  const countryLabel = countryIso2 ? countryLabelForNominatim(countryIso2) : null;
+  const variants = buildNominatimQueryVariants(name, city, countryLabel);
+  const boundedManchester = shouldUseManchesterViewbox(city, countryIso2);
+
+  let top: NominatimHit | null = null;
+  let usedQuery: string | null = null;
+
+  for (const q of variants) {
+    try {
+      const hit = await nominatimSearch(q, {
+        boundedManchester,
+        countryIso2,
+      });
+      if (hit) {
+        top = hit;
+        usedQuery = q;
+        break;
+      }
+    } catch {
+      return Response.json(
+        { error: "Geocode service error. Try again shortly." },
+        { status: 502 }
+      );
+    }
+  }
+
+  let lat: number;
+  let lng: number;
+  let label: string;
+  let importance: number | undefined;
+  let source: GeocodeResult["source"] = "nominatim";
+  let queryUsed = usedQuery ?? variants[0] ?? `${name}, ${city}`;
+
+  if (top) {
+    lat = Number(top.lat);
+    lng = Number(top.lon);
+    label = top.display_name;
+    importance = top.importance;
+  } else {
+    const g = await geocodeViaGooglePlacesTextSearch(name, city, countryIso2);
+    if (!g) {
+      return Response.json({ result: null });
+    }
+    lat = g.lat;
+    lng = g.lng;
+    label = g.label;
+    source = "google_places";
+    queryUsed = `${name} ${city} (Google Places)`;
+  }
 
   let websiteUrl: string | null = null;
   try {
     websiteUrl = await lookupRestaurantWebsite({
-      name,
+      name: nameRaw.trim() || name,
       city,
       lat,
       lng,
+      region: regionForGooglePlaces(countryIso2),
     });
   } catch {
     websiteUrl = null;
@@ -100,12 +183,12 @@ export async function GET(req: Request) {
   const result: GeocodeResult = {
     lat,
     lng,
-    label: top.display_name,
-    importance: top.importance,
-    query: q,
+    label,
+    importance,
+    query: queryUsed,
     websiteUrl,
+    source,
   };
 
   return Response.json({ result });
 }
-

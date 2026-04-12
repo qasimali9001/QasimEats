@@ -27,7 +27,7 @@ export type Review = {
   location: LatLng | null;
   needsLocation: boolean;
   geocode?: {
-    source: "googleMapsUrl" | "nominatim" | "csv" | "manual";
+    source: "googleMapsUrl" | "nominatim" | "google_places" | "csv" | "manual";
     label?: string;
     importance?: number;
   };
