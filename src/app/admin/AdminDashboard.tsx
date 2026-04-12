@@ -70,7 +70,7 @@ export default function AdminDashboard({
   initialRows: Row[];
 }) {
   const [rows, setRows] = useState<Row[]>(initialRows);
-  const [selectedId, setSelectedId] = useState<string | "new" | null>(null);
+  const [selectedId, setSelectedId] = useState<string | "new" | null>("new");
   const [form, setForm] = useState(emptyForm());
   const [town, setTown] = useState("Manchester");
   const [geoBusy, setGeoBusy] = useState(false);
@@ -695,12 +695,6 @@ export default function AdminDashboard({
 
           {msg ? (
             <p className="break-words text-sm text-sky-200/90">{msg}</p>
-          ) : null}
-          {selectedId === null ? (
-            <p className="text-sm text-muted">
-              Choose <span className="text-foreground/90">New pin</span> or pick a
-              restaurant from the list to edit.
-            </p>
           ) : null}
 
           <div className="flex flex-wrap gap-2 pb-[env(safe-area-inset-bottom)]">
