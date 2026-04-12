@@ -111,6 +111,8 @@ export default function AdminDashboard({
   const [auditLoading, setAuditLoading] = useState(false);
   const [manualMapOpen, setManualMapOpen] = useState(false);
   const [websiteBusy, setWebsiteBusy] = useState(false);
+  /** After a successful save, download full DB CSV (same as Export CSV). */
+  const [exportCsvAfterEntry, setExportCsvAfterEntry] = useState(false);
 
   const selected = useMemo(
     () => (selectedId && selectedId !== "new" ? rows.find((r) => r.id === selectedId) : null),
@@ -146,29 +148,39 @@ export default function AdminDashboard({
 
   const [exportBusy, setExportBusy] = useState(false);
 
+  async function downloadFullCsvExport(): Promise<
+    { ok: true } | { ok: false; message: string }
+  > {
+    const res = await fetch("/api/admin/export/csv", { credentials: "include" });
+    if (!res.ok) {
+      return {
+        ok: false,
+        message: res.status === 401 ? "Not signed in." : "Export failed.",
+      };
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get("Content-Disposition");
+    const m = cd?.match(/filename="([^"]+)"/);
+    const filename =
+      m?.[1] ?? `qasimeats-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return { ok: true };
+  }
+
   async function exportCsv() {
     setExportBusy(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/admin/export/csv", { credentials: "include" });
-      if (!res.ok) {
-        setMsg(res.status === 401 ? "Not signed in." : "Export failed.");
-        return;
-      }
-      const blob = await res.blob();
-      const cd = res.headers.get("Content-Disposition");
-      const m = cd?.match(/filename="([^"]+)"/);
-      const filename = m?.[1] ?? `qasimeats-export-${new Date().toISOString().slice(0, 10)}.csv`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setMsg("Download started.");
+      const r = await downloadFullCsvExport();
+      setMsg(r.ok ? "Download started." : r.message);
     } finally {
       setExportBusy(false);
     }
@@ -398,7 +410,16 @@ export default function AdminDashboard({
         setRows((r) => [...r, row].sort((a, b) => a.name.localeCompare(b.name)));
         setSelectedId(row.id);
         setForm(rowToForm(row));
-        setMsg("Created.");
+        if (exportCsvAfterEntry) {
+          const ex = await downloadFullCsvExport();
+          setMsg(
+            ex.ok
+              ? "Created. CSV downloaded."
+              : `Created. CSV export failed: ${ex.message}`
+          );
+        } else {
+          setMsg("Created.");
+        }
         return;
       }
 
@@ -419,7 +440,16 @@ export default function AdminDashboard({
         r.map((x) => (x.id === row.id ? row : x)).sort((a, b) => a.name.localeCompare(b.name))
       );
       setForm(rowToForm(row));
-      setMsg("Saved.");
+      if (exportCsvAfterEntry) {
+        const ex = await downloadFullCsvExport();
+        setMsg(
+          ex.ok
+            ? "Saved. CSV downloaded."
+            : `Saved. CSV export failed: ${ex.message}`
+        );
+      } else {
+        setMsg("Saved.");
+      }
     } finally {
       setSaveBusy(false);
     }
@@ -828,6 +858,22 @@ export default function AdminDashboard({
           {msg ? (
             <p className="break-words text-sm text-sky-200/90">{msg}</p>
           ) : null}
+
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-foreground/90">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/25 bg-background/80 text-sky-600 focus:ring-sky-500/40"
+              checked={exportCsvAfterEntry}
+              onChange={(e) => setExportCsvAfterEntry(e.target.checked)}
+            />
+            <span>
+              Export CSV After Entry
+              <span className="mt-0.5 block text-xs font-normal text-muted">
+                After Save succeeds, downloads a full database export (same as
+                Export CSV). Leave off for faster saves.
+              </span>
+            </span>
+          </label>
 
           <div className="flex flex-wrap gap-2 pb-[env(safe-area-inset-bottom)]">
             <button
