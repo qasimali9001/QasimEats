@@ -259,6 +259,7 @@ export function FiltersBar({
   const [openCuisine, setOpenCuisine] = useState(false);
   const [openDish, setOpenDish] = useState(false);
   const [openPrice, setOpenPrice] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSort, setSearchSort] = useState<SearchSort>("name");
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
@@ -386,129 +387,157 @@ export function FiltersBar({
             </div>
           ) : null}
         </div>
-      </div>
 
-      <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <MealTimeToggles
-          mealTags={filters.mealTags}
-          onChange={(mealTags) => onChange({ ...filters, mealTags })}
-        />
-        <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">
-          Min rating
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={5}
-          step={0.5}
-          value={filters.minRating}
-          onChange={(e) =>
-            onChange({ ...filters, minRating: Number(e.target.value) })
-          }
-          className="h-9 min-w-[7rem] flex-1"
-        />
-        <span className="w-10 shrink-0 text-right tabular-nums text-sm text-foreground">
-          {filters.minRating}
-        </span>
         <button
           type="button"
-          onClick={() => onChange({ ...DEFAULT_REVIEW_FILTERS })}
-          className="shrink-0 rounded-lg border border-white/15 bg-surface-elevated px-3 py-1.5 text-xs font-medium text-foreground hover:bg-white/10"
+          aria-expanded={filtersOpen}
+          aria-controls="filters-panel"
+          onClick={() => setFiltersOpen((v) => !v)}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-surface-elevated px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-white/10"
         >
-          Reset filters
+          <span>Filters</span>
+          <svg
+            className={`h-4 w-4 text-muted transition-transform duration-200 ${
+              filtersOpen ? "rotate-180" : ""
+            }`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </button>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <FilterSection
-          id="filter-cuisine"
-          title="Cuisine"
-          selectedCount={filters.cuisineGroups.length}
-          open={openCuisine}
-          onToggle={() => setOpenCuisine((v) => !v)}
-        >
-          <div className="flex flex-wrap gap-2">
-            {cuisineGroups.map((c) => {
-              const pressed = filters.cuisineGroups.includes(c);
-              return (
-                <ToggleChip
-                  key={c}
-                  label={c}
-                  pressed={pressed}
-                  onToggle={() =>
-                    onChange({
-                      ...filters,
-                      cuisineGroups: pressed
-                        ? filters.cuisineGroups.filter((x) => x !== c)
-                        : [...filters.cuisineGroups, c],
-                    })
-                  }
-                />
-              );
-            })}
+      {filtersOpen ? (
+        <div id="filters-panel" className="flex flex-col gap-3">
+          <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <MealTimeToggles
+              mealTags={filters.mealTags}
+              onChange={(mealTags) => onChange({ ...filters, mealTags })}
+            />
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">
+              Min rating
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={5}
+              step={0.5}
+              value={filters.minRating}
+              onChange={(e) =>
+                onChange({ ...filters, minRating: Number(e.target.value) })
+              }
+              className="h-9 min-w-[7rem] flex-1"
+            />
+            <span className="w-10 shrink-0 text-right tabular-nums text-sm text-foreground">
+              {filters.minRating}
+            </span>
+            <button
+              type="button"
+              onClick={() => onChange({ ...DEFAULT_REVIEW_FILTERS })}
+              className="shrink-0 rounded-lg border border-white/15 bg-surface-elevated px-3 py-1.5 text-xs font-medium text-foreground hover:bg-white/10"
+            >
+              Reset filters
+            </button>
           </div>
-        </FilterSection>
 
-        {dishTypes.length > 0 ? (
-          <FilterSection
-            id="filter-dish"
-            title="Dish type"
-            selectedCount={filters.dishTypes.length}
-            open={openDish}
-            onToggle={() => setOpenDish((v) => !v)}
-          >
-            <div className="flex flex-wrap gap-2">
-              {dishTypes.map((t) => {
-                const pressed = filters.dishTypes.includes(t);
-                return (
-                  <ToggleChip
-                    key={t}
-                    label={t}
-                    pressed={pressed}
-                    onToggle={() =>
-                      onChange({
-                        ...filters,
-                        dishTypes: pressed
-                          ? filters.dishTypes.filter((x) => x !== t)
-                          : [...filters.dishTypes, t],
-                      })
-                    }
-                  />
-                );
-              })}
-            </div>
-          </FilterSection>
-        ) : null}
+          <div className="flex flex-col gap-2">
+            <FilterSection
+              id="filter-cuisine"
+              title="Cuisine"
+              selectedCount={filters.cuisineGroups.length}
+              open={openCuisine}
+              onToggle={() => setOpenCuisine((v) => !v)}
+            >
+              <div className="flex flex-wrap gap-2">
+                {cuisineGroups.map((c) => {
+                  const pressed = filters.cuisineGroups.includes(c);
+                  return (
+                    <ToggleChip
+                      key={c}
+                      label={c}
+                      pressed={pressed}
+                      onToggle={() =>
+                        onChange({
+                          ...filters,
+                          cuisineGroups: pressed
+                            ? filters.cuisineGroups.filter((x) => x !== c)
+                            : [...filters.cuisineGroups, c],
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </FilterSection>
 
-        <FilterSection
-          id="filter-price"
-          title="Price"
-          selectedCount={filters.priceRanges.length}
-          open={openPrice}
-          onToggle={() => setOpenPrice((v) => !v)}
-        >
-          <div className="flex flex-wrap gap-2">
-            {PRICE_RANGE_ORDER.map((idRange) => {
-              const pressed = filters.priceRanges.includes(idRange);
-              return (
-                <ToggleChip
-                  key={idRange}
-                  label={PRICE_RANGE_LABEL[idRange]}
-                  pressed={pressed}
-                  onToggle={() =>
-                    onChange({
-                      ...filters,
-                      priceRanges: pressed
-                        ? filters.priceRanges.filter((x) => x !== idRange)
-                        : [...filters.priceRanges, idRange],
-                    })
-                  }
-                />
-              );
-            })}
+            {dishTypes.length > 0 ? (
+              <FilterSection
+                id="filter-dish"
+                title="Dish type"
+                selectedCount={filters.dishTypes.length}
+                open={openDish}
+                onToggle={() => setOpenDish((v) => !v)}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {dishTypes.map((t) => {
+                    const pressed = filters.dishTypes.includes(t);
+                    return (
+                      <ToggleChip
+                        key={t}
+                        label={t}
+                        pressed={pressed}
+                        onToggle={() =>
+                          onChange({
+                            ...filters,
+                            dishTypes: pressed
+                              ? filters.dishTypes.filter((x) => x !== t)
+                              : [...filters.dishTypes, t],
+                          })
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </FilterSection>
+            ) : null}
+
+            <FilterSection
+              id="filter-price"
+              title="Price"
+              selectedCount={filters.priceRanges.length}
+              open={openPrice}
+              onToggle={() => setOpenPrice((v) => !v)}
+            >
+              <div className="flex flex-wrap gap-2">
+                {PRICE_RANGE_ORDER.map((idRange) => {
+                  const pressed = filters.priceRanges.includes(idRange);
+                  return (
+                    <ToggleChip
+                      key={idRange}
+                      label={PRICE_RANGE_LABEL[idRange]}
+                      pressed={pressed}
+                      onToggle={() =>
+                        onChange({
+                          ...filters,
+                          priceRanges: pressed
+                            ? filters.priceRanges.filter((x) => x !== idRange)
+                            : [...filters.priceRanges, idRange],
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </FilterSection>
           </div>
-        </FilterSection>
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
